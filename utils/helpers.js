@@ -5,15 +5,16 @@ export function fullUrl(path) {
 }
 
 
-export async function safeClick(locator, options = {}) {
-  try {
-      await locator.waitFor({ state: 'visible', timeout: options.timeout ?? 5000 });
-      await locator.click(options);
-      return true; // clicked
-  } catch {
-  
+export async function safeClick(page) {
+  const denyBtn = page.locator('button:has-text("Deny"), #CybotCookiebotDialogBodyButtonDecline');
+  const cookieDialog = page.locator('#CybotCookiebotDialog');
+
+  if (await cookieDialog.isVisible({ timeout: 5000 }).catch(() => false)) {
+    if (await denyBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await denyBtn.click();
+      console.log('Cookie banner dismissed.');
+    }
   }
-  return false; // not clicked
 }
 
 /**
@@ -24,12 +25,20 @@ export async function safeClick(locator, options = {}) {
  * @param {string} expected - Expected text to contain
  */
 export async function expectTextContains(locator, expected) {
-  const text = (await locator.textContent() || '').trim().toLowerCase();
-  
-  if (Array.isArray(expected)) {
-    const lowered = expected.map(e => String(e).toLowerCase());
-    expect(lowered.some(e => text.includes(e))).toBeTruthy();
-  } else {
-    expect(text).toContain(String(expected).toLowerCase());
+  try {
+    await locator.waitFor({ state: 'attached', timeout: 10000 });
+    await locator.waitFor({ state: 'visible', timeout: 10000 });
+
+    const text = (await locator.textContent() || '').trim().toLowerCase();
+
+    if (Array.isArray(expected)) {
+      const lowered = expected.map(e => String(e).toLowerCase());
+      expect(lowered.some(e => text.includes(e))).toBeTruthy();
+    } else {
+      expect(text).toContain(String(expected).toLowerCase());
+    }
+
+  } catch (err) {
+    throw new Error(`Expected alert message not found within timeout. Details: ${err.message}`);
   }
 }

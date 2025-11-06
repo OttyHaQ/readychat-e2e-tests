@@ -1,7 +1,7 @@
 export class DashboardPage {
   constructor(page) {
     this.page = page;
-    this.title = page.locator('span[class="text-2xl font-bold"]');
+    this.title = page.getByRole('heading', { name: 'Dashboard', level: 2 });
     this.profileBtn = page.locator('.relative.w-full > [aria-expanded="false"] > .ps-4');
     this.logOutBtn = page.locator('.overflow-hidden > :nth-child(3) > :nth-child(2)');
     this.signOutBtn = page.locator('xpath=//button[normalize-space()="Sign Out"]');

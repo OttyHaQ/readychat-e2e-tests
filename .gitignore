@@ -1,1 +1,13 @@
 node_modules
+mcp-server.js
+.env.dev
+.env.qa
+.env.prod
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+
+

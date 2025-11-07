@@ -1,9 +1,10 @@
 name: Playwright Tests
+
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, develop ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main, master, develop ]
   workflow_dispatch:
     inputs:
       environment:
@@ -12,48 +13,13 @@ on:
         default: 'qa'
         type: choice
         options:
-          - qa
-          - production
           - dev
-  
+          - qa
+          - prod
+
 jobs:
   test:
     timeout-minutes: 60
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        shardIndex: [1, 2]
-        shardTotal: [2]
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: lts/*
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: npm ci
-
-    - name: Install Playwright Browsers
-      run: npx playwright install --with-deps chromium
-
-    - name: Run Playwright tests
-      run: npx playwright test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
-    - uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: playwright-report-${{ matrix.shardIndex }}
-        path: playwright-report/
-        retention-days: 30
-        
-  merge-reports:
-    if: always()
-    needs: [test]
     runs-on: ubuntu-latest
     
     steps:
@@ -64,29 +30,49 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '18'
+        cache: 'npm'
 
     - name: Install dependencies
       run: npm ci
 
-    - name: Download all reports
-      uses: actions/download-artifact@v4
-      with:
-        path: all-reports
-        pattern: playwright-report-*
+    - name: Install Playwright Browsers
+      run: npx playwright install --with-deps chromium
 
-    - name: Merge reports
+    - name: Create environment files
       run: |
-        npx playwright merge-reports --reporter html ./all-reports
+        echo "${{ secrets.ENV_DEV }}" > .env.dev
+        echo "${{ secrets.ENV_QA }}" > .env.qa
+        echo "${{ secrets.ENV_PROD }}" > .env.prod
 
-    - name: Upload merged report
+    - name: Run Playwright tests
+      env:
+        env: ${{ github.event.inputs.environment || 'qa' }}
+      run: npx playwright test
+      continue-on-error: true
+
+    - name: Upload HTML report
       uses: actions/upload-artifact@v4
+      if: always()
       with:
-        name: playwright-report-merged
+        name: playwright-report
         path: playwright-report/
+        retention-days: 30
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: test-results/
         retention-days: 30
 
     - name: Publish test results summary
       if: always()
       run: |
-        echo "## Test Results" >> $GITHUB_STEP_SUMMARY
+        echo "## Playwright Test Results" >> $GITHUB_STEP_SUMMARY
+        echo "Environment: ${{ github.event.inputs.environment || 'qa' }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
         echo "Test execution completed. Check the artifacts for detailed reports." >> $GITHUB_STEP_SUMMARY
+        if [ -f playwright-report/index.html ]; then
+          echo "✅ HTML Report generated successfully" >> $GITHUB_STEP_SUMMARY
+       

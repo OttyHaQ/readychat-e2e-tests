@@ -10,18 +10,18 @@ export default defineConfig({
         timeout: 30000,
     },
     use: {
-        headless: false,
+        headless: process.env.CI ? true : false,
         baseURL: process.env.BASE_URL,
         actionTimeout: 150000, 
         navigationTimeout: 150000,
-        viewport: null,              // disables the default viewport
+        viewport: process.env.CI ? { width: 1280, height: 720 } : null,              // disables the default viewport
         launchOptions: {
-            args: ['--start-maximized'],
+            args: process.env.CI ? [] : ['--start-maximized'],
             // slowMo: 1000
         }
     },
     reporter: [
-        ['html', { open: 'always' }],
+        ['html', { open: process.env.CI ? 'never' : 'always' }],
         ['list'],
     ],
 });

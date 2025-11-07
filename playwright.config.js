@@ -1,6 +1,5 @@
-import { defineConfig } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test';
 import dotenv from 'dotenv';
-
 dotenv.config({ path: `.env.${process.env.env}` });
 
 if (!process.env.BASE_URL) {
@@ -34,8 +33,8 @@ export default defineConfig({
         // Add realistic browser behavior
         extraHTTPHeaders: {
         'Accept-Language': 'en-US,en;q=0.9',
+        },
     },
-
     // Use Chromium with specific settings to avoid detection
     projects: [
         {
@@ -56,3 +55,4 @@ export default defineConfig({
         ['list'],
     ],
 });
+

@@ -1,7 +1,7 @@
 import { defineConfig } from '@playwright/test';
 import dotenv from 'dotenv';
 
-dotenv.config({ path: `.env.${process.env.ENV}` });
+dotenv.config({ path: `.env.${process.env.env}` });
 
 export default defineConfig({
     testDir: './tests/specs',

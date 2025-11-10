@@ -48,7 +48,7 @@ test.describe('User Signup Flow', () => {
         await landingPage.clickGetStarted();
         
       // Verify we're on the signup page
-        await expect(page).toHaveURL(/signup|register/, { timeout: 10000 });
+        await expect(page).toHaveURL(/\/(signup|register)/, { timeout: 10000 });
       });
 
       // Complete Signup Form 
@@ -172,7 +172,7 @@ test.describe('User Signup Flow', () => {
         console.log('✓ Signed out successfully');
         
         // Verify redirect to login or landing page
-        await expect(page).toHaveURL(/login|signin|home|\/$/, { timeout: 10000 });
+        await expect(page).toHaveURL(/\/auth\/login/, { timeout: 10000 });
       });
 
       console.log('\n✅ Complete signup and onboarding workflow test passed!');

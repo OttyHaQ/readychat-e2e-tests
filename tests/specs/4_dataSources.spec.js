@@ -43,7 +43,7 @@ test.describe('Data Sources Management', () => {
         await landingPage.login.click();
         
         // Verify we're on login page
-        await expect(page).toHaveURL(/login|signin/, { timeout: 10000 });
+        await expect(page).toHaveURL(/\/auth\/login/, { timeout: 10000 });
         
         // Handle cookie consent on login page
         await safeClick(page);
@@ -52,7 +52,7 @@ test.describe('Data Sources Management', () => {
         await signInPage.fillSignInForm(testCredentials.username, testCredentials.password);
         
         // Wait for successful login - dashboard should load
-        await page.waitForURL(/dashboard|onboarding/, { timeout: 15000 });
+        await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 15000 })
         
         console.log('✓ User signed in successfully');
         

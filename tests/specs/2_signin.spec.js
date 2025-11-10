@@ -51,7 +51,7 @@ test.describe('User Sign In Flow', () => {
         await landingPage.login.click();
         
         // Verify we're on the sign-in page
-        await expect(page).toHaveURL(/login|signin/, { timeout: 10000 });
+        await expect(page).toHaveURL(/\/auth\/login/, { timeout: 10000 });
         console.log('✓ Sign-in page loaded');
       });
 
@@ -117,7 +117,7 @@ test.describe('User Sign In Flow', () => {
         await landingPage.login.click();
         
         // Verify we're on the sign-in page
-        await expect(page).toHaveURL(/login|signin/, { timeout: 10000 });
+        await expect(page).toHaveURL(/\/(login|signin)/, { timeout: 10000 });
         console.log('✓ Sign-in page loaded');
       });
 
@@ -144,7 +144,7 @@ test.describe('User Sign In Flow', () => {
       // Verify No Redirect 
       await test.step('Verify user remains on sign-in page', async () => {
         // User should still be on login page
-        await expect(page).toHaveURL(/login|signin/, { timeout: 5000 });
+        await expect(page).toHaveURL(/\/(login|signin)/, { timeout: 5000 });
         
         // Sign-in button should still be visible
         await expect(signInPage.signInBtn).toBeVisible();
@@ -175,7 +175,7 @@ test.describe('User Sign In Flow', () => {
         await page.goto('/');
         await safeClick(page);
         await landingPage.login.click();
-        await expect(page).toHaveURL(/login|signin/, { timeout: 10000 });
+        await expect(page).toHaveURL(/\/(login|signin)/, { timeout: 10000 });
       });
 
       await test.step('Click forgot password link', async () => {
@@ -201,12 +201,12 @@ test.describe('User Sign In Flow', () => {
         await page.goto('/');
         await safeClick(page);
         await landingPage.login.click();
-        await expect(page).toHaveURL(/login|signin/, { timeout: 10000 });
+        await expect(page).toHaveURL(/\/(login|signin)/, { timeout: 10000 });
       });
 
       await test.step('Click create account link', async () => {
         await signInPage.navigateToSignup();
-        await expect(page).toHaveURL(/signup|register/, { timeout: 10000 });
+        await expect(page).toHaveURL(/\/(signup|register)/, { timeout: 10000 });
         console.log('✓ Navigated to sign up page');
       });
 

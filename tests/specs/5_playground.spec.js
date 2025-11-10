@@ -38,11 +38,11 @@ test.describe('AI Bot Playground', () => {
       await landingPage.login.waitFor({ state: 'visible', timeout: 10000 });
       await landingPage.login.click();
       
-      await expect(page).toHaveURL(/login|signin/, { timeout: 10000 });
+     await expect(page).toHaveURL(/\/auth\/login/, { timeout: 10000 });
       await safeClick(page);
       
       await signInPage.fillSignInForm(testCredentials.username, testCredentials.password);
-      await page.waitForURL(/dashboard|onboarding/, { timeout: 15000 });
+      await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 15000 })
       
       console.log('✓ User signed in successfully');
     } catch (error) {

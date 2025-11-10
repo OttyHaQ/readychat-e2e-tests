@@ -51,7 +51,7 @@ test.describe('User Sign In Flow', () => {
         await landingPage.login.click();
         
         // Verify we're on the sign-in page
-        await expect(page).toHaveURL(/\/auth\/login/, { timeout: 10000 });
+        await expect(page).toHaveURL('/en/auth/login', { timeout: 10000 });
         console.log('✓ Sign-in page loaded');
       });
 
@@ -74,7 +74,7 @@ test.describe('User Sign In Flow', () => {
       // Verify Dashboard Access 
       await test.step('Verify redirect to dashboard', async () => {
         // Wait for redirect to dashboard
-        await page.waitForURL(/dashboard/, { timeout: 15000 });
+        await expect(page).toHaveURL('/en/dashboard', { timeout: 10000 });
         
         // Verify dashboard title is visible
         await expect(dashboardPage.title).toBeVisible({ timeout: 10000 });

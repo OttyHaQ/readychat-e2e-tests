@@ -31,41 +31,54 @@ test.describe('Data Sources Management', () => {
       const signInPage = new SignInPage(page);
   
       try {
-        // Navigate to application
-        await page.goto('/');
-        await page.waitForLoadState('domcontentloaded');
-        
-        // Handle cookie consent
-        await safeClick(page);
-        
-        // Navigate to login
-        await landingPage.login.waitFor({ state: 'visible', timeout: 10000 });
-        await landingPage.login.click();
-        
-        // Verify we're on login page
-        await expect(page).toHaveURL(/\/auth\/login/, { timeout: 10000 });
-        
-        // Handle cookie consent on login page
-        await safeClick(page);
-        
-        // Sign in
-        await signInPage.fillSignInForm(testCredentials.username, testCredentials.password);
-        
-        // Wait for successful login - dashboard should load
-        await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 15000 })
-        
-        console.log('✓ User signed in successfully');
-        
-      } catch (error) {
-        console.error('❌ Login failed in beforeEach:', error.message);
-        
-        // Take screenshot on login failure
-        const screenshotPath = `tests/screenshots/channels-login-failure-${Date.now()}.png`;
-        await page.screenshot({ path: screenshotPath, fullPage: true });
-        console.error(`Screenshot saved to: ${screenshotPath}`);
-        
-        throw error;
-      }
+            // Navigate and sign in with retry logic
+            await page.goto('/');
+            await page.waitForLoadState('domcontentloaded');
+            
+            await landingPage.login.waitFor({ state: 'visible', timeout: 10000 });
+            
+            // Click and wait for navigation with retry
+            let navigationSuccess = false;
+            let attempts = 0;
+            const maxAttempts = 3;
+            
+            while (!navigationSuccess && attempts < maxAttempts) {
+                attempts++;
+                
+                try {
+                    const navigationPromise = page.waitForURL(
+                    url => url.href.includes('/auth/login'), 
+                    { timeout: 30000 }
+                );
+                
+                await landingPage.login.click();
+                await navigationPromise;
+                
+                // Verify we're actually on login page
+                const currentUrl = page.url();
+                if (currentUrl.includes('/en/auth/login')) {
+                    navigationSuccess = true;
+                    console.log(`✓ Navigated to login (attempt ${attempts})`);
+                }
+                } catch (error) {
+                if (attempts === maxAttempts) throw error;
+                    console.log(`⚠️ Navigation attempt ${attempts} failed, retrying...`);
+                    await page.waitForTimeout(2000);
+                }
+            }
+            
+            // Wait for form to be ready
+            await signInPage.usernameField.waitFor({ state: 'visible', timeout: 10000 });
+            await safeClick(page);
+            
+            await signInPage.fillSignInForm(testCredentials.username, testCredentials.password);
+            await expect(page).toHaveURL('/en/dashboard', { timeout: 30000 });
+            
+            console.log('✓ User signed in successfully');
+            } catch (error) {
+            console.error('❌ Login failed:', error.message);
+            throw error;
+        }
     });
 
   test('Should display unanswered questions table with all columns', async ({ page }) => {

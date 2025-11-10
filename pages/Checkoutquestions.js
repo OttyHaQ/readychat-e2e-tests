@@ -3,8 +3,11 @@ export class CheckoutQuestionsPage {
         this.page = page;
         
         // Navigation
-        this.ordersMenu = page.locator('a[href*="/orders"], button:has-text("Orders")');
-        this.checkoutQuestionsLink = page.locator('a[href*="/checkout-questions"]');
+        this.orderManagementMenuItem = page.getByRole('link', { name: /order management/i })
+            .or(page.getByText(/order management/i).first());
+        this.checkoutQuestionsLink = page.getByRole('link', { name: /checkout questions/i })
+            .or(page.locator('a:has-text("Checkout Questions")'));
+        
         
         // Page Header
         this.pageTitle = page.getByTestId('page-title');
@@ -55,10 +58,14 @@ export class CheckoutQuestionsPage {
         this.cancelButton = page.locator('button:has-text("Cancel")').first();
         this.addQuestionButton = page.getByRole('button', {name: 'Add New Store Question'});
         this.editQuestionButton = page.getByText('Edit Question');
+        this.deleteQuestionButton = page.getByText('Delete Question');
+        
         
         // Delete Confirmation
-        this.confirmDeleteButton = page.locator('button:has-text("Delete"), button:has-text("Confirm"), button:has-text("Yes")').last();
-        this.cancelDeleteButton = page.locator('button:has-text("Cancel"), button:has-text("No")').last();
+        this.confirmDeleteButton = page.getByRole('button', { name: /confirm/i })
+            .or(page.locator('button:has-text("Confirm")'));
+        this.cancelDeleteButton = page.getByRole('button', { name: /cancel/i })
+            .or(page.locator('button:has-text("Cancel")'));
         
         // Success/Error Messages
         this.successMessage = page.locator('[role="alert"], .alert-success, .toast, [class*="success"]').first();
@@ -71,12 +78,19 @@ export class CheckoutQuestionsPage {
         this.emptyState = page.locator('text=/no questions|no data|empty/i').first();
     }
 
+     async navigateToOrderManagement() {
+    await this.orderManagementMenuItem.waitFor({ state: 'visible', timeout: 10000 });
+    await this.orderManagementMenuItem.click();
+  }
+
+
     /**
      * Navigate to Checkout Questions page
      */
     async navigateToCheckoutQuestions() {
+        await this.navigateToOrderManagement();
+        await this.checkoutQuestionsLink.waitFor({ state: 'visible', timeout: 10000 });
         await this.checkoutQuestionsLink.click();
-        await this.page.waitForURL(/checkout-questions/);
     }
 
     /**
@@ -176,18 +190,19 @@ export class CheckoutQuestionsPage {
     /**
      * Delete a question
      */
-    async deleteQuestion(rowIndex = 0) {
-        // Click delete button for specific row
-        await this.deleteButtons.nth(rowIndex).click();
-        
-        // Wait for confirmation dialog
-        await this.page.waitForTimeout(500);
-        
-        // Confirm deletion
+    async deleteQuestion() {
+        // Click the actions button
+        const row = this.page.locator('tbody tr').first();
+        const actionsButton = row.locator('td').last().getByRole('button');
+        await actionsButton.hover();
+        await actionsButton.click();
+        await this.page.waitForTimeout(5000);
+
+        // Click "Edit Question" from dropdown
+        await this.deleteQuestionButton.click({ timeout: 2000,force: true });
+
         await this.confirmDeleteButton.click();
         
-        // Wait for success message or row to disappear
-        await this.page.waitForTimeout(1000);
     }
 
     /**
@@ -219,12 +234,118 @@ export class CheckoutQuestionsPage {
         await this.page.waitForTimeout(1000);
     }
 
-    /**
-     * Verify question exists in table
-     */
+    // Main method - use this one
     async verifyQuestionExists(questionText) {
+        console.log(`🔍 Searching for question: "${questionText}"`);
+        
+        // Wait for table to update after sorting
+        await this.page.waitForTimeout(1500);
+        await this.page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
+        
+        // Now check first page (most recent items should be on top)
+        console.log(`📄 Checking sorted table...`);
+        
+        // Wait for table to be stable
+        await this.page.waitForSelector('tbody tr', { state: 'visible', timeout: 5000 });
+        
+        // Check if question exists on current page
         const question = this.page.locator(`tbody tr:has-text("${questionText}")`);
-        await question.waitFor({ state: 'visible', timeout: 10000 });
+        const questionCount = await question.count();
+        
+        if (questionCount > 0) {
+            await question.first().waitFor({ state: 'visible', timeout: 5000 });
+            console.log(`✓ Question found after sorting`);
+            return true;
+        }
+        
+        // If not found on first page after sorting, search through all pages
+        console.log(`⚠️ Question not on first page, searching all pages...`);
+        return await this.searchAllPages(questionText);
+    }
+
+    // Helper: Sort by descending
+    async sortByDescending() {
+        try {
+            // Click the Reorder column sort button (with SVG icon)
+            const sortButton = this.page.locator('th:has-text("Reorder") button:has(svg)').first();
+            
+            const sortButtonExists = await sortButton.count() > 0;
+            
+            if (sortButtonExists) {
+                await sortButton.click();
+                console.log('✓ Clicked sort dropdown');
+                
+                // Wait for dropdown menu
+                await this.page.waitForTimeout(500);
+                
+                // Click "Sort Descending"
+                const sortDescending = this.page.getByText('Sort Descending', { exact: true });
+                await sortDescending.waitFor({ state: 'visible', timeout: 5000 });
+                await sortDescending.click();
+                
+                console.log('✓ Selected "Sort Descending"');
+                await this.page.waitForTimeout(1000);
+            } else {
+                console.log('⚠️ Sort button not found, skipping sort');
+            }
+        } catch (error) {
+            console.log(`⚠️ Could not sort: ${error.message}`);
+        }
+    }
+
+    // Helper: Search all pages (fallback)
+    async searchAllPages(questionText) {
+        let currentPage = 1;
+        const maxPages = 50;
+        
+        while (currentPage <= maxPages) {
+            console.log(`📄 Checking page ${currentPage}...`);
+            
+            const rows = await this.page.locator('tbody tr').all();
+            
+            for (const row of rows) {
+                const rowText = await row.textContent();
+                if (rowText.toLowerCase().includes(questionText.toLowerCase())) {
+                    await row.waitFor({ state: 'visible', timeout: 5000 });
+                    console.log(`✓ Question found on page ${currentPage}`);
+                    return true;
+                }
+            }
+            
+            // Navigate to next page
+            const nextPageBtn = await this.getNextPageButton();
+            if (!nextPageBtn || !(await this.canNavigateNext(nextPageBtn))) {
+                break;
+            }
+            
+            await nextPageBtn.click();
+            await this.page.waitForTimeout(1500);
+            currentPage++;
+        }
+        
+        throw new Error(`Question "${questionText}" not found after checking ${currentPage} page(s)`);
+    }
+
+    // Helper: Get next page button
+    async getNextPageButton() {
+        const selectors = [
+            'button[aria-label*="next page" i]',
+            'button:has-text("Next")',
+            'nav button:last-of-type'
+        ];
+        
+        for (const selector of selectors) {
+            const button = this.page.locator(selector).first();
+            if (await button.count() > 0) return button;
+        }
+        return null;
+    }
+
+    // Helper: Check if can navigate next
+    async canNavigateNext(nextButton) {
+        const isVisible = await nextButton.isVisible().catch(() => false);
+        const isDisabled = await nextButton.isDisabled().catch(() => true);
+        return isVisible && !isDisabled;
     }
 
     /**

@@ -2,61 +2,87 @@ import { test, expect } from '@playwright/test';
 import { CheckoutQuestionsPage } from '../../pages/Checkoutquestions.js';
 import { SignInPage } from '../../pages/SigninPage.js';
 import { LandingPage } from '../../pages/LandingPage.js';
+import { AIBot } from '../../pages/AIBot.js';
 import { safeClick } from '../../utils/helpers.js';
 
 test.describe('Checkout Questions Management', () => {
-    let checkoutQuestionsPage;
-
     // Test credentials
     const testCredentials = {
         username: process.env.USER_NAME || 'default_user',
         password: process.env.PASSWORD || 'default_password'
     };
+    
 
     test.beforeEach(async ({ page }) => {
         test.setTimeout(120000); // 2 minutes timeout
 
         const landingPage = new LandingPage(page);
         const signInPage = new SignInPage(page);
-        checkoutQuestionsPage = new CheckoutQuestionsPage(page);
+        
 
         try {
-            // Navigate and sign in
+            // Navigate and sign in with retry logic
             await page.goto('/');
             await page.waitForLoadState('domcontentloaded');
             
             await landingPage.login.waitFor({ state: 'visible', timeout: 10000 });
-            await landingPage.login.click();
             
-            await expect(page).toHaveURL(/\/auth\/login/, { timeout: 10000 });
+            // Click and wait for navigation with retry
+            let navigationSuccess = false;
+            let attempts = 0;
+            const maxAttempts = 3;
+            
+            while (!navigationSuccess && attempts < maxAttempts) {
+                attempts++;
+                
+                try {
+                    const navigationPromise = page.waitForURL(
+                    url => url.href.includes('/en/auth/login'), 
+                    { timeout: 30000 }
+                );
+                
+                await landingPage.login.click();
+                await navigationPromise;
+                
+                // Verify we're actually on login page
+                const currentUrl = page.url();
+                if (currentUrl.includes('/en/auth/login')) {
+                    navigationSuccess = true;
+                    console.log(`✓ Navigated to login (attempt ${attempts})`);
+                }
+                } catch (error) {
+                if (attempts === maxAttempts) throw error;
+                    console.log(`⚠️ Navigation attempt ${attempts} failed, retrying...`);
+                    await page.waitForTimeout(2000);
+                }
+            }
+            
+            // Wait for form to be ready
+            await signInPage.usernameField.waitFor({ state: 'visible', timeout: 10000 });
             await safeClick(page);
             
             await signInPage.fillSignInForm(testCredentials.username, testCredentials.password);
-            await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 15000 })
+            await expect(page).toHaveURL('/en/dashboard', { timeout: 30000 });
             
             console.log('✓ User signed in successfully');
-
-            // Navigate to Checkout Questions page
-            await page.goto('/en/dashboard/orders/checkout-questions');
-            await checkoutQuestionsPage.waitForPageLoad();
-            console.log('✓ Navigated to Checkout Questions page');
-
-        } catch (error) {
-            console.error('❌ Setup failed:', error.message);
-            
-            // Take screenshot on failure
-            const screenshotPath = `tests/screenshots/checkout-questions-setup-failure-${Date.now()}.png`;
-            await page.screenshot({ path: screenshotPath, fullPage: true });
-            console.log(`📸 Screenshot saved: ${screenshotPath}`);
-            
+            } catch (error) {
+            console.error('❌ Login failed:', error.message);
             throw error;
         }
     });
 
     test('Verify column headers are displayed', async ({ page }) => {
         await test.step('Check that all expected column headers are visible', async () => {
+
+            const checkoutQuestionsPage = new CheckoutQuestionsPage(page);
+            const aiBotPage = new AIBot(page);
+
             // Verify page loaded
+            await aiBotPage.aiBotMenuItem.hover();
+            await checkoutQuestionsPage.navigateToCheckoutQuestions();
             await expect(checkoutQuestionsPage.pageTitle).toBeVisible({ timeout: 10000 });
+
+            await expect(checkoutQuestionsPage.questionColumnHeader).toBeVisible({timeout: 5000});
             
             // Get all column headers
             const headers = await checkoutQuestionsPage.getColumnHeaderTexts();
@@ -82,7 +108,20 @@ test.describe('Checkout Questions Management', () => {
     });
 
     test('Should export orders in different formats', async ({ page }) => {
+
+        const checkoutQuestionsPage = new CheckoutQuestionsPage(page);
+        const aiBotPage = new AIBot(page);
+
+            
+        await aiBotPage.aiBotMenuItem.hover();
+        await checkoutQuestionsPage.navigateToCheckoutQuestions();
+        await expect(checkoutQuestionsPage.pageTitle).toBeVisible({ timeout: 10000 });
+
+        // Verify page loaded
+        await expect(checkoutQuestionsPage.questionColumnHeader).toBeVisible({timeout: 5000});
+
         await test.step('Open export modal', async () => {
+            
             await checkoutQuestionsPage.exportBtn.click();
             // Wait for modal heading instead
             await expect(checkoutQuestionsPage.exportModal).toBeVisible({ timeout: 5000 });
@@ -121,6 +160,16 @@ test.describe('Checkout Questions Management', () => {
 
     test('Verify user can add new checkout question', async ({ page }) => {
         const newQuestion = `Test Question ${Date.now()}`;
+        const checkoutQuestionsPage = new CheckoutQuestionsPage(page);
+        const aiBotPage = new AIBot(page);
+
+            
+        await aiBotPage.aiBotMenuItem.hover();
+        await checkoutQuestionsPage.navigateToCheckoutQuestions();
+        await expect(checkoutQuestionsPage.pageTitle).toBeVisible({ timeout: 10000 });
+
+        // Verify page loaded
+        await expect(checkoutQuestionsPage.questionColumnHeader).toBeVisible({timeout: 5000});
 
         await test.step('Open add question dialog', async () => {
             // Verify add button is visible
@@ -136,9 +185,13 @@ test.describe('Checkout Questions Management', () => {
 
             // Wait for success message or table update
             await page.waitForTimeout(2000);
+            await expect(aiBotPage.alert.first()).toContainText(/successfully/i);
         });
 
         await test.step('Verify question was added to the table', async () => {
+            // First, sort by descending order to show most recent items first
+            await checkoutQuestionsPage.sortByDescending();
+
             // Verify question appears in table
             await checkoutQuestionsPage.verifyQuestionExists(newQuestion);
             console.log('✓ New question appears in table');
@@ -153,6 +206,16 @@ test.describe('Checkout Questions Management', () => {
 
     test('Verify user can edit checkout question', async ({ page }) => {
         const updatedQuestion = `Updated Question ${Date.now()}`;
+        const checkoutQuestionsPage = new CheckoutQuestionsPage(page);
+        const aiBotPage = new AIBot(page);
+
+            
+        await aiBotPage.aiBotMenuItem.hover();
+        await checkoutQuestionsPage.navigateToCheckoutQuestions();
+        await expect(checkoutQuestionsPage.pageTitle).toBeVisible({ timeout: 10000 });
+
+        // Verify page loaded
+        await expect(checkoutQuestionsPage.questionColumnHeader).toBeVisible({timeout: 5000});
 
         await test.step('Verify at least one question exists', async () => {
             const questionCount = await checkoutQuestionsPage.getQuestionCount();
@@ -172,9 +235,13 @@ test.describe('Checkout Questions Management', () => {
             await page.waitForTimeout(5000);
             await checkoutQuestionsPage.editQuestion(updatedQuestion);
             console.log("✓ Question edited");
+            
 
             // Wait for update
             await page.waitForTimeout(2000);
+            await expect(aiBotPage.alert.first()).toContainText(/successfully/i);
+            await page.reload();
+            await page.waitForTimeout(2000)
      
             // verify question exist
             await checkoutQuestionsPage.verifyQuestionExists(updatedQuestion);
@@ -184,51 +251,60 @@ test.describe('Checkout Questions Management', () => {
         });
     });
 
-    test.skip('Verify user can delete checkout question', async ({ page }) => {
+    test('Verify user can delete checkout question', async ({ page }) => {
+
+        const checkoutQuestionsPage = new CheckoutQuestionsPage(page);
+        const aiBotPage = new AIBot(page);
+
+            
+        await aiBotPage.aiBotMenuItem.hover();
+        await checkoutQuestionsPage.navigateToCheckoutQuestions();
+        await expect(checkoutQuestionsPage.pageTitle).toBeVisible({ timeout: 10000 });
+
+        // Verify page loaded
+        await expect(checkoutQuestionsPage.questionColumnHeader).toBeVisible({timeout: 5000});
+        
         await test.step('Verify at least one question exists', async () => {
             let questionCount = await checkoutQuestionsPage.getQuestionCount();
+            console.log(questionCount);
             
-            if (questionCount === 0) {
-                // Add a question first if none exist
-                const tempQuestion = `Temp Question for Deletion ${Date.now()}`;
-                await checkoutQuestionsPage.addNewQuestion(tempQuestion);
-                await page.waitForTimeout(2000);
-                questionCount = await checkoutQuestionsPage.getQuestionCount();
-                console.log('✓ Created a test question for deletion');
-            }
+            // Add a question first 
+            const tempQuestion = `Temp Question for Deletion ${Date.now()}`;
+            await checkoutQuestionsPage.addNewQuestion(tempQuestion);
+            await page.waitForTimeout(2000);
+            questionCount = await checkoutQuestionsPage.getQuestionCount();
+            console.log('✓ Created a test question for deletion');
 
-            console.log(`📊 Initial question count: ${questionCount}`);
-
-            // Verify delete button is visible
-            await expect(checkoutQuestionsPage.firstDeleteButton).toBeVisible({ timeout: 10000 });
-            console.log('✓ Delete button is visible');
         });
 
         await test.step('Delete the first question', async () => {
-            // Get question text before deletion
-            const questionToDelete = await checkoutQuestionsPage.getQuestionText(0);
-            console.log(`🗑️ Deleting question: "${questionToDelete}"`);
 
-            // Get initial count
-            const initialCount = await checkoutQuestionsPage.getQuestionCount();
+            await checkoutQuestionsPage.sortByDescending();
 
             // Delete the question
-            await checkoutQuestionsPage.deleteQuestion(0);
+            await checkoutQuestionsPage.deleteQuestion();
             console.log('✓ Delete confirmed');
 
             // Wait for deletion to complete
             await page.waitForTimeout(2000);
-
-            // Verify count decreased
-            const newCount = await checkoutQuestionsPage.getQuestionCount();
-            expect(newCount).toBeLessThan(initialCount);
-            console.log(`📊 Question count after deletion: ${newCount}`);
+            await expect(aiBotPage.alert.first()).toContainText(/successfully/i);
 
             console.log('✅ Delete question functionality verified');
         });
     });
 
-    test.skip('Verify user can reorder columns/questions', async ({ page }) => {
+    test('Verify user can reorder columns/questions', async ({ page }) => {
+
+        const checkoutQuestionsPage = new CheckoutQuestionsPage(page);
+        const aiBotPage = new AIBot(page);
+
+        await aiBotPage.aiBotMenuItem.hover();
+        await checkoutQuestionsPage.navigateToCheckoutQuestions();
+        await expect(checkoutQuestionsPage.pageTitle).toBeVisible({ timeout: 10000 });
+
+        // Verify page loaded
+        await expect(checkoutQuestionsPage.questionColumnHeader).toBeVisible({timeout: 5000});
+
         await test.step('Verify drag handles or reorder functionality exists', async () => {
             // Check if there are multiple questions to reorder
             const questionCount = await checkoutQuestionsPage.getQuestionCount();

@@ -28,24 +28,54 @@ test.describe('AI Bot Configuration', () => {
     const signInPage = new SignInPage(page);
 
     try {
-      // Navigate and sign in
-      await page.goto('/');
-      await page.waitForLoadState('domcontentloaded');
-      
-      await landingPage.login.waitFor({ state: 'visible', timeout: 10000 });
-      await landingPage.login.click();
-      
-      await expect(page).toHaveURL(/\/auth\/login/, { timeout: 10000 });
-      await safeClick(page);
-      
-      await signInPage.fillSignInForm(testCredentials.username, testCredentials.password);
-      await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 15000 })
-      
-      console.log('✓ User signed in successfully');
-    } catch (error) {
-      console.error('❌ Login failed:', error.message);
-      throw error;
-    }
+            // Navigate and sign in with retry logic
+            await page.goto('/');
+            await page.waitForLoadState('domcontentloaded');
+            
+            await landingPage.login.waitFor({ state: 'visible', timeout: 10000 });
+            
+            // Click and wait for navigation with retry
+            let navigationSuccess = false;
+            let attempts = 0;
+            const maxAttempts = 3;
+            
+            while (!navigationSuccess && attempts < maxAttempts) {
+                attempts++;
+                
+                try {
+                    const navigationPromise = page.waitForURL(
+                    url => url.href.includes('en/auth/login'), 
+                    { timeout: 30000 }
+                );
+                
+                await landingPage.login.click();
+                await navigationPromise;
+                
+                // Verify we're actually on login page
+                const currentUrl = page.url();
+                if (currentUrl.includes('en/auth/login')) {
+                    navigationSuccess = true;
+                    console.log(`✓ Navigated to login (attempt ${attempts})`);
+                }
+                } catch (error) {
+                if (attempts === maxAttempts) throw error;
+                    console.log(`⚠️ Navigation attempt ${attempts} failed, retrying...`);
+                    await page.waitForTimeout(2000);
+                }
+            }
+            
+            // Wait for form to be ready
+            await signInPage.usernameField.waitFor({ state: 'visible', timeout: 10000 });
+            await safeClick(page);
+            
+            await signInPage.fillSignInForm(testCredentials.username, testCredentials.password);
+            await expect(page).toHaveURL('/en/dashboard', { timeout: 30000 });
+            
+            console.log('✓ User signed in successfully');
+            } catch (error) {
+            console.error('❌ Login failed:', error.message);
+            throw error;
+        }
   });
 
   test('Should update general configuration settings', async ({ page }) => {

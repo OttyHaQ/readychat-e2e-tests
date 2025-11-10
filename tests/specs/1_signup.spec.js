@@ -48,7 +48,7 @@ test.describe('User Signup Flow', () => {
         await landingPage.clickGetStarted();
         
       // Verify we're on the signup page
-        await expect(page).toHaveURL(/\/(signup|register)/, { timeout: 10000 });
+        await expect(page).toHaveURL('/en/auth/signup', { timeout: 10000 });
       });
 
       // Complete Signup Form 
@@ -56,15 +56,15 @@ test.describe('User Signup Flow', () => {
         await signupPage.fillSignUpForm(username, password, email);
         
         // Verify signup submission
-        await page.waitForURL(fullUrl('en/auth/email-sent'), { timeout: 10000 });
-        console.log('✓ Signup form submitted successfully');
+        await expect(page).toHaveURL(fullUrl('en/onboarding'), { timeout: 10000 });
+        console.log('✓ Signup form submitted successfully, redirected to Onboarding flow');
       });
 
-      //  Wait for Redirect to Login 
-      await test.step('Wait for automatic redirect to login page', async () => {
-        await expect(page).toHaveURL(fullUrl('en/auth/login'), { timeout: 15000 });
-        console.log('✓ Redirected to login page');
-      });
+      // //  Wait for Redirect to Login 
+      // await test.step('Wait for automatic redirect to login page', async () => {
+      //   await expect(page).toHaveURL(fullUrl('/en/auth/login'), { timeout: 15000 });
+      //   console.log('✓ Redirected to login page');
+      // });
 
       // Save Test Credentials
       await test.step('Save test credentials to file', async () => {
@@ -83,23 +83,23 @@ test.describe('User Signup Flow', () => {
         console.log(`✓ Credentials saved to ${credentialsPath}`);
       });
 
-      // Verify Email via Mailinator 
-      await test.step('Verify email address', async () => {
-        await page.goto('https://www.mailinator.com/');
-        await signupPage.verifyEmail(username);
-        console.log('✓ Email verified successfully');
-      });
+      // // Verify Email via Mailinator 
+      // await test.step('Verify email address', async () => {
+      //   await page.goto('https://www.mailinator.com/');
+      //   await signupPage.verifyEmail(username);
+      //   console.log('✓ Email verified successfully');
+      // });
 
-      // Sign In with Verified Account 
-      await test.step('Sign in with verified credentials', async () => {
-        await page.goto(fullUrl('en/auth/login'));
-        await safeClick(page);
-        await signinPage.fillSignInForm(username, password);
+      // // Sign In with Verified Account 
+      // await test.step('Sign in with verified credentials', async () => {
+      //   await page.goto(fullUrl('/en/auth/login'));
+      //   await safeClick(page);
+      //   await signinPage.fillSignInForm(username, password);
         
-        // Verify redirect to onboarding
-        await expect(page).toHaveURL(fullUrl('en/onboarding'), { timeout: 10000 });
-        console.log('✓ Signed in successfully');
-      });
+      //   // Verify redirect to onboarding
+      //   await expect(page).toHaveURL(fullUrl('/en/onboarding'), { timeout: 10000 });
+      //   console.log('✓ Signed in successfully');
+      // });
 
       // Complete Onboarding - Personal Details 
       await test.step('Complete personal details step', async () => {
@@ -172,7 +172,7 @@ test.describe('User Signup Flow', () => {
         console.log('✓ Signed out successfully');
         
         // Verify redirect to login or landing page
-        await expect(page).toHaveURL(/\/auth\/login/, { timeout: 10000 });
+        await expect(page).toHaveURL('en/auth/login', { timeout: 10000 });
       });
 
       console.log('\n✅ Complete signup and onboarding workflow test passed!');

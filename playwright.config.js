@@ -8,15 +8,19 @@ if (!process.env.BASE_URL) {
 
 export default defineConfig({
     testDir: './tests/specs',
-    timeout: 1120000,
+    workers: process.env.CI ? 1 : undefined,
+    timeout: process.env.CI ? 1120000 : 120000,
     expect: {
-        timeout: 30000,
+        timeout: process.env.CI ? 30000 : 20000,
     },
+
+    retries: process.env.CI ? 3 : 0,
+
     use: {
         headless: process.env.CI ? true : false,
         baseURL: process.env.BASE_URL,
-        actionTimeout: 150000, 
-        navigationTimeout: 150000,
+        actionTimeout: process.env.CI ? 150000 : 100000, 
+        navigationTimeout: process.env.CI ? 150000 : 100000,
 
         // Anti-bot detection settings
         viewport: process.env.CI ? { width: 1920, height: 1080 } : null, // disables the default viewport

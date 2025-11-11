@@ -18,7 +18,7 @@ export default defineConfig({
 
     use: {
         headless: process.env.CI ? true : false,
-        headless: false,
+        // headless: false,
         baseURL: process.env.BASE_URL,
         actionTimeout: process.env.CI ? 150000 : 100000, 
         navigationTimeout: process.env.CI ? 150000 : 100000,

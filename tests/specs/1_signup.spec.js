@@ -54,17 +54,12 @@ test.describe('User Signup Flow', () => {
       // Complete Signup Form 
       await test.step('Fill and submit signup form', async () => {
         await signupPage.fillSignUpForm(username, password, email);
+        await page.waitForTimeout(5000);
         
         // Verify signup submission
         await expect(page).toHaveURL(fullUrl('en/onboarding'), { timeout: 10000 });
         console.log('✓ Signup form submitted successfully, redirected to Onboarding flow');
       });
-
-      // //  Wait for Redirect to Login 
-      // await test.step('Wait for automatic redirect to login page', async () => {
-      //   await expect(page).toHaveURL(fullUrl('/en/auth/login'), { timeout: 15000 });
-      //   console.log('✓ Redirected to login page');
-      // });
 
       // Save Test Credentials
       await test.step('Save test credentials to file', async () => {

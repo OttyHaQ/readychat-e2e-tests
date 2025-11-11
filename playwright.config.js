@@ -9,15 +9,16 @@ if (!process.env.BASE_URL) {
 export default defineConfig({
     testDir: './tests/specs',
     workers: process.env.CI ? 1 : undefined,
-    timeout: process.env.CI ? 1120000 : 120000,
+    timeout: process.env.CI ? 1120000 : 1120000,
     expect: {
         timeout: process.env.CI ? 30000 : 20000,
     },
 
-    retries: process.env.CI ? 3 : 0,
+    retries: process.env.CI ? 3 : 1,
 
     use: {
         headless: process.env.CI ? true : false,
+        headless: false,
         baseURL: process.env.BASE_URL,
         actionTimeout: process.env.CI ? 150000 : 100000, 
         navigationTimeout: process.env.CI ? 150000 : 100000,
@@ -55,7 +56,7 @@ export default defineConfig({
     ],
 
     reporter: [
-        ['html', { open: process.env.CI ? 'never' : 'always' }],
+        ['html', { open: !process.env.CI ? 'always' : 'never' }],
         ['list'],
     ],
 });

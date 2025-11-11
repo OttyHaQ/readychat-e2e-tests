@@ -413,7 +413,7 @@ async changeOrderStatus() {
   const changeableStatuses = ['in progress', 'draft', 'confirmed', 'shipping', 'delivered'];
   const maxPagesToCheck = 5;
 
-  for (let currentPage = 1; currentPage <= maxPagesToCheck; page++) {
+  for (let currentPage = 1; currentPage <= maxPagesToCheck; currentPage++) {
     console.log(`\n🔍 Checking page ${currentPage}...`);
     
     await this.page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});

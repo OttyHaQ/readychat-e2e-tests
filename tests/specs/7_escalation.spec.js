@@ -97,6 +97,7 @@ test.describe('Escalation Management', () => {
 
         await test.step('Accept a ticket', async () => {
             // Check if accept button exists
+            await escalationPage.acceptBtn.waitFor({state: 'visible', timeout: 10000 });
             const acceptBtnCount = await escalationPage.acceptBtn.count();
             
             if (acceptBtnCount === 0) {
@@ -153,8 +154,6 @@ test.describe('Escalation Management', () => {
                     console.log('✓ Closed support chatbot');
                 }
                 
-                // Wait for page to stabilize after tab switch
-                await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
                 
                 // Check for "No tickets" message
                 const noTicketsMsg = page.getByText(/no tickets assigned to you/i);
@@ -168,6 +167,8 @@ test.describe('Escalation Management', () => {
                 
                 // Verify chat button exists in the ticket table/list area (not elsewhere)
                 const ticketChatBtn = page.locator('main').getByRole('button', { name: /^chat$/i }).first();
+                // Wait for page to stabilize after tab switch
+                await ticketChatBtn.waitFor({state: 'visible', timeout: 10000 });
                 const chatBtnCount = await ticketChatBtn.count();
                 
                 if (chatBtnCount === 0) {
@@ -199,42 +200,44 @@ test.describe('Escalation Management', () => {
     const aiBotPage = new AIBot(page);
 
     try {
-      await test.step('Navigate to Escalation page', async () => {
-        await escalationPage.navigateToEscalation();
-        await safeClick(page);
-      });
+        await test.step('Navigate to Escalation page', async () => {
+            await escalationPage.navigateToEscalation();
+            await safeClick(page);
+        });
 
-      await test.step('Switch to My Tickets tab', async () => {
-        await escalationPage.switchToTab('my_tickets');
-        console.log('✓ Switched to My Tickets tab');
-      });
+        await test.step('Switch to My Tickets tab', async () => {
+            await escalationPage.switchToTab('my_tickets');
+            console.log('✓ Switched to My Tickets tab');
+        });
 
-     const resolveBtnCount = await escalationPage.resolveBtn.count();
+        await escalationPage.resolveBtn.waitFor({state: 'visible', timeout: 10000 });
 
-     if (resolveBtnCount === 0) {
-        console.log('⊘ No tickets available in this tab - skipping test');
-        test.skip();
-        return;
-     }
+        const resolveBtnCount = await escalationPage.resolveBtn.count();
 
-      await test.step('Resolve a ticket', async () => {
-        // Verify resolve button is visible
-        await expect(escalationPage.resolveBtn).toBeVisible({ timeout: 10000 });
-        
-        // Resolve the ticket
-        await escalationPage.resolveTicket();
-        
-        // Verify success message
-        await aiBotPage.alert.first().waitFor({ state: 'visible', timeout: 10000 });
-        await expect(aiBotPage.alert.first()).toContainText(/successfully/i);
-        console.log('✓ Ticket resolved successfully');
-      });
+        if (resolveBtnCount === 0) {
+            console.log('⊘ No tickets available in this tab - skipping test');
+            test.skip();
+            return;
+        }
 
-      console.log('\n✅ Resolve ticket test passed!');
-    } catch (error) {
-      console.error('\n❌ Test failed:', error.message);
-      throw error;
-    }
+        await test.step('Resolve a ticket', async () => {
+            // Verify resolve button is visible
+            await expect(escalationPage.resolveBtn).toBeVisible({ timeout: 10000 });
+            
+            // Resolve the ticket
+            await escalationPage.resolveTicket();
+            
+            // Verify success message
+            await aiBotPage.alert.first().waitFor({ state: 'visible', timeout: 10000 });
+            await expect(aiBotPage.alert.first()).toContainText(/successfully/i);
+            console.log('✓ Ticket resolved successfully');
+        });
+
+        console.log('\n✅ Resolve ticket test passed!');
+        } catch (error) {
+        console.error('\n❌ Test failed:', error.message);
+        throw error;
+        }
   });
 
   test('Should reopen a resolved ticket', async ({ page }) => {
@@ -242,209 +245,213 @@ test.describe('Escalation Management', () => {
     const aiBotPage = new AIBot(page);
 
     try {
-      await test.step('Navigate to Escalation page', async () => {
-        await escalationPage.navigateToEscalation();
-        await safeClick(page);
-      });
+        await test.step('Navigate to Escalation page', async () => {
+            await escalationPage.navigateToEscalation();
+            await safeClick(page);
+        });
 
-      await test.step('Switch to Resolved tab', async () => {
-        await escalationPage.switchToTab('resolved');
-        console.log('✓ Switched to Resolved tab');
-      });
+        await test.step('Switch to Resolved tab', async () => {
+            await escalationPage.switchToTab('resolved');
+            console.log('✓ Switched to Resolved tab');
+        });
 
-     const reopenBtnCount = await escalationPage.reopenBtn.count();
+        await escalationPage.reopenBtn.waitFor({state: 'visible', timeout: 10000 });
 
-     if (reopenBtnCount === 0) {
-        console.log('⊘ No tickets available in this tab - skipping test');
-        test.skip();
-        return;
-     }
+        const reopenBtnCount = await escalationPage.reopenBtn.count();
 
-      await test.step('Reopen a ticket', async () => {
-        // Verify reopen button is visible
-        await expect(escalationPage.reopenBtn).toBeVisible({ timeout: 10000 });
-        
-        // Reopen the ticket
-        await escalationPage.reopenTicket();
-        
-        // Verify success message
-        await aiBotPage.alert.first().waitFor({ state: 'visible', timeout: 10000 });
-        await expect(aiBotPage.alert.first()).toContainText(/successfully/i);
-        console.log('✓ Ticket reopened successfully');
-      });
+        if (reopenBtnCount === 0) {
+            console.log('⊘ No tickets available in this tab - skipping test');
+            test.skip();
+            return;
+        }
 
-      console.log('\n✅ Reopen ticket test passed!');
-    } catch (error) {
-      console.error('\n❌ Test failed:', error.message);
-      throw error;
-    }
+        await test.step('Reopen a ticket', async () => {
+            // Verify reopen button is visible
+            await expect(escalationPage.reopenBtn).toBeVisible({ timeout: 10000 });
+            
+            // Reopen the ticket
+            await escalationPage.reopenTicket();
+            
+            // Verify success message
+            await aiBotPage.alert.first().waitFor({ state: 'visible', timeout: 10000 });
+            await expect(aiBotPage.alert.first()).toContainText(/successfully/i);
+            console.log('✓ Ticket reopened successfully');
+        });
+
+        console.log('\n✅ Reopen ticket test passed!');
+        } catch (error) {
+        console.error('\n❌ Test failed:', error.message);
+        throw error;
+        }
   });
 
   test.skip('Should close a ticket', async ({ page }) => {
-    // Skipped - implement when close functionality is ready
-    const escalationPage = new Escalation(page);
-    const aiBotPage = new AIBot(page);
+        // Skipped - implement when close functionality is ready
+        const escalationPage = new Escalation(page);
+        const aiBotPage = new AIBot(page);
 
-    try {
-      await escalationPage.navigateToEscalation();
-      await safeClick(page);
-      
-      await escalationPage.switchToTab('resolved');
+        try {
+        await escalationPage.navigateToEscalation();
+        await safeClick(page);
+        
+        await escalationPage.switchToTab('resolved');
 
-     const closeBtnCount = await escalationPage.closeBtn.count();
+        const closeBtnCount = await escalationPage.closeBtn.count();
 
-     if (closeBtnCount === 0) {
-        console.log('⊘ No tickets available in this tab - skipping test');
-        test.skip();
-        return;
-     }
-      
-      await expect(escalationPage.closeBtn).toBeVisible({ timeout: 10000 });
-      await escalationPage.closeTicket();
-      
-      await expect(aiBotPage.alert.first()).toContainText(/successfully/i);
-      console.log('✓ Ticket closed successfully');
-    } catch (error) {
-      console.error('❌ Test failed:', error.message);
-      throw error;
-    }
+        await escalationPage.closeBtn.waitFor({state: 'visible', timeout: 10000 });
+
+        if (closeBtnCount === 0) {
+            console.log('⊘ No tickets available in this tab - skipping test');
+            test.skip();
+            return;
+        }
+        
+        await expect(escalationPage.closeBtn).toBeVisible({ timeout: 10000 });
+        await escalationPage.closeTicket();
+        
+        await expect(aiBotPage.alert.first()).toContainText(/successfully/i);
+        console.log('✓ Ticket closed successfully');
+        } catch (error) {
+        console.error('❌ Test failed:', error.message);
+        throw error;
+        }
   });
 
   test('Should sort tickets by different priorities', async ({ page }) => {
-    const escalationPage = new Escalation(page);
+        const escalationPage = new Escalation(page);
 
-    try {
-      await test.step('Navigate to Escalation page', async () => {
-        await escalationPage.navigateToEscalation();
-        await safeClick(page);
-      });
+        try {
+        await test.step('Navigate to Escalation page', async () => {
+            await escalationPage.navigateToEscalation();
+            await safeClick(page);
+        });
 
-      await test.step('Test all sort options', async () => {
-        // This will iterate through all available sort options
-        await escalationPage.sortBy();
-        console.log('✓ All sort options tested');
-      });
+        await test.step('Test all sort options', async () => {
+            // This will iterate through all available sort options
+            await escalationPage.sortBy();
+            console.log('✓ All sort options tested');
+        });
 
-      console.log('\n✅ Sort test passed!');
-    } catch (error) {
-      console.error('\n❌ Test failed:', error.message);
-      throw error;
-    }
+        console.log('\n✅ Sort test passed!');
+        } catch (error) {
+        console.error('\n❌ Test failed:', error.message);
+        throw error;
+        }
   });
 
   test('Should search for tickets', async ({ page }) => {
-    const escalationPage = new Escalation(page);
+        const escalationPage = new Escalation(page);
 
-    try {
-      await test.step('Navigate to Escalation page', async () => {
-        await escalationPage.navigateToEscalation();
-        await safeClick(page);
-      });
+        try {
+        await test.step('Navigate to Escalation page', async () => {
+            await escalationPage.navigateToEscalation();
+            await safeClick(page);
+        });
 
-      await test.step('Search for tickets', async () => {
-        await escalationPage.searchTickets('test');
-        console.log('✓ Search performed');
-        
-        // Verify search field has the text
-        await expect(escalationPage.searchField).toHaveValue('test');
-      });
+        await test.step('Search for tickets', async () => {
+            await escalationPage.searchTickets('test');
+            console.log('✓ Search performed');
+            
+            // Verify search field has the text
+            await expect(escalationPage.searchField).toHaveValue('test');
+        });
 
-      console.log('\n✅ Search test passed!');
-    } catch (error) {
-      console.error('\n❌ Test failed:', error.message);
-      throw error;
-    }
+        console.log('\n✅ Search test passed!');
+        } catch (error) {
+        console.error('\n❌ Test failed:', error.message);
+        throw error;
+        }
   });
 
   test('Should filter tickets by priority', async ({ page }) => {
-    const escalationPage = new Escalation(page);
+        const escalationPage = new Escalation(page);
 
-    try {
-      await test.step('Navigate to Escalation page', async () => {
-        await escalationPage.navigateToEscalation();
-        await safeClick(page);
-      });
+        try {
+        await test.step('Navigate to Escalation page', async () => {
+            await escalationPage.navigateToEscalation();
+            await safeClick(page);
+        });
 
-      await test.step('Filter by High priority', async () => {
-        await escalationPage.sortByPriority('high');
-        console.log('✓ Filtered by High priority');
-        
-        // Verify dropdown shows High
-        await expect(escalationPage.sortDropdown).toContainText(/high/i);
-      });
+        await test.step('Filter by High priority', async () => {
+            await escalationPage.sortByPriority('high');
+            console.log('✓ Filtered by High priority');
+            
+            // Verify dropdown shows High
+            await expect(escalationPage.sortDropdown).toContainText(/high/i);
+        });
 
-      await test.step('Filter by Medium priority', async () => {
-        await escalationPage.sortByPriority('medium');
-        console.log('✓ Filtered by Medium priority');
-        
-        await expect(escalationPage.sortDropdown).toContainText(/medium/i);
-      });
+        await test.step('Filter by Medium priority', async () => {
+            await escalationPage.sortByPriority('medium');
+            console.log('✓ Filtered by Medium priority');
+            
+            await expect(escalationPage.sortDropdown).toContainText(/medium/i);
+        });
 
-      await test.step('Filter by Low priority', async () => {
-        await escalationPage.sortByPriority('low');
-        console.log('✓ Filtered by Low priority');
-        
-        await expect(escalationPage.sortDropdown).toContainText(/low/i);
-      });
+        await test.step('Filter by Low priority', async () => {
+            await escalationPage.sortByPriority('low');
+            console.log('✓ Filtered by Low priority');
+            
+            await expect(escalationPage.sortDropdown).toContainText(/low/i);
+        });
 
-      await test.step('Reset to All', async () => {
-        await escalationPage.sortByPriority('all');
-        console.log('✓ Reset to All priorities');
-        
-        await expect(escalationPage.sortDropdown).toContainText(/all/i);
-      });
+        await test.step('Reset to All', async () => {
+            await escalationPage.sortByPriority('all');
+            console.log('✓ Reset to All priorities');
+            
+            await expect(escalationPage.sortDropdown).toContainText(/all/i);
+        });
 
-      console.log('\n✅ Filter by priority test passed!');
-    } catch (error) {
-      console.error('\n❌ Test failed:', error.message);
-      throw error;
-    }
+        console.log('\n✅ Filter by priority test passed!');
+        } catch (error) {
+        console.error('\n❌ Test failed:', error.message);
+        throw error;
+        }
   });
 
   test('Should verify all tabs are accessible', async ({ page }) => {
-    const escalationPage = new Escalation(page);
+        const escalationPage = new Escalation(page);
 
-    try {
-      await test.step('Navigate to Escalation page', async () => {
-        await escalationPage.navigateToEscalation();
-      });
+        try {
+        await test.step('Navigate to Escalation page', async () => {
+            await escalationPage.navigateToEscalation();
+        });
 
-      await test.step('Verify all tabs', async () => {
-        // Verify all tabs are visible
-        await expect(escalationPage.myTicketsTab).toBeVisible();
-        await expect(escalationPage.unassignedTab).toBeVisible();
-        await expect(escalationPage.resolvedTab).toBeVisible();
-        await expect(escalationPage.closedTab).toBeVisible();
-        console.log('✓ All tabs are visible');
-      });
+        await test.step('Verify all tabs', async () => {
+            // Verify all tabs are visible
+            await expect(escalationPage.myTicketsTab).toBeVisible();
+            await expect(escalationPage.unassignedTab).toBeVisible();
+            await expect(escalationPage.resolvedTab).toBeVisible();
+            await expect(escalationPage.closedTab).toBeVisible();
+            console.log('✓ All tabs are visible');
+        });
 
-      await test.step('Navigate through each tab', async () => {
-        await escalationPage.switchToTab('my_tickets');
-        await expect(escalationPage.myTicketsTab).toHaveAttribute('aria-selected', 'true').catch(() => {});
-        console.log('✓ My Tickets tab accessible');
-        
-        await escalationPage.switchToTab('unassigned');
-        console.log('✓ Unassigned tab accessible');
-        
-        await escalationPage.switchToTab('resolved');
-        console.log('✓ Resolved tab accessible');
-        
-        await escalationPage.switchToTab('closed');
-        console.log('✓ Closed tab accessible');
-      });
+        await test.step('Navigate through each tab', async () => {
+            await escalationPage.switchToTab('my_tickets');
+            await expect(escalationPage.myTicketsTab).toHaveAttribute('aria-selected', 'true').catch(() => {});
+            console.log('✓ My Tickets tab accessible');
+            
+            await escalationPage.switchToTab('unassigned');
+            console.log('✓ Unassigned tab accessible');
+            
+            await escalationPage.switchToTab('resolved');
+            console.log('✓ Resolved tab accessible');
+            
+            await escalationPage.switchToTab('closed');
+            console.log('✓ Closed tab accessible');
+        });
 
-      console.log('\n✅ Tab navigation test passed!');
-    } catch (error) {
-      console.error('\n❌ Test failed:', error.message);
-      throw error;
-    }
+        console.log('\n✅ Tab navigation test passed!');
+        } catch (error) {
+        console.error('\n❌ Test failed:', error.message);
+        throw error;
+        }
   });
 
   test.afterEach(async ({ page }, testInfo) => {
-    if (testInfo.status !== testInfo.expectedStatus) {
-      const screenshotPath = `tests/screenshots/${testInfo.title.replace(/\s+/g, '-')}-${Date.now()}.png`;
-      await page.screenshot({ path: screenshotPath, fullPage: true });
-      console.log(`📸 Screenshot saved: ${screenshotPath}`);
-    }
-  });
+        if (testInfo.status !== testInfo.expectedStatus) {
+        const screenshotPath = `tests/screenshots/${testInfo.title.replace(/\s+/g, '-')}-${Date.now()}.png`;
+        await page.screenshot({ path: screenshotPath, fullPage: true });
+        console.log(`📸 Screenshot saved: ${screenshotPath}`);
+        }
+    });
 });

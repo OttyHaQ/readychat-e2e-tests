@@ -1,0 +1,445 @@
+export class ProductsPage {
+    constructor(page) {
+        this.page = page;
+        
+        // Navigation
+        this.productManagementMenu = page.getByRole('link', { name: /product management/i })
+            .or(page.getByText(/product management/i).first());
+        this.productsLink = page.getByRole('link', { name: /products/i })
+            .or(page.locator('a:has-text("Products")'));
+        
+        // Page Header & Title
+        this.pageTitle = page.locator('h1, h2').filter({ hasText: /products/i }).first();
+        
+        // Metrics Cards
+        this.metricsTitle = page.locator('text=/product metrics/i').first();
+        this.totalProductsMetric = page.locator('text=/total products/i').first();
+        this.recentlyAddedMetric = page.locator('text=/recently added/i').first();
+        this.trendingProductsMetric = page.locator('text=/trending products/i').first();
+        
+        // Status Tabs
+        this.productsTab = page.locator('button:has-text("Products"), [role="tab"]:has-text("Products")').first();
+        this.deletedTab = page.locator('button:has-text("Deleted"), [role="tab"]:has-text("Deleted")').first();
+        
+        // Table Column Headers
+        this.columnHeaders = page.locator('thead th, [role="columnheader"]');
+        this.nameColumnHeader = page.locator('thead th, [role="columnheader"]').filter({ hasText: /name|product/i }).first();
+        this.categoryColumnHeader = page.locator('thead th, [role="columnheader"]').filter({ hasText: /category/i }).first();
+        this.priceColumnHeader = page.locator('thead th, [role="columnheader"]').filter({ hasText: /price/i }).first();
+        this.stockColumnHeader = page.locator('thead th, [role="columnheader"]').filter({ hasText: /stock|quantity/i }).first();
+        this.statusColumnHeader = page.locator('thead th, [role="columnheader"]').filter({ hasText: /status/i }).first();
+        this.actionsColumnHeader = page.locator('thead th, [role="columnheader"]').filter({ hasText: /actions/i }).first();
+        
+        // Action Buttons
+        this.addProductButton = page.locator('button:has-text("Add"), button:has-text("New Product"), button:has-text("Create Product")').first();
+        this.exportBtn = page.locator('button:has-text("Export")').first();
+        this.reorderColumnsBtn = page.locator('button:has-text("Reorder"), [aria-label*="reorder" i]').first();
+        
+        // Export Modal
+        this.exportModal = page.getByText("Export Table Data")
+            .or (page.locator('heading:has-text("Export Table Data")'));
+        this.csvBtn = page.locator('button:has-text("CSV")');
+        this.xlsxBtn = page.locator('button:has-text("XLSX")');
+        this.pdfBtn = page.locator('button:has-text("PDF")');
+        this.closeModalBtn = page.locator('button[aria-label="Close modal"]');
+        
+        // Table Rows
+        this.tableRows = page.locator('tbody tr, [role="row"]:not(:has(th))');
+        this.firstTableRow = page.locator('tbody tr, [role="row"]:not(:has(th))').first();
+        
+        // Row Action Buttons
+        this.actionsButton = page.locator('tbody tr button[aria-label*="actions" i], tbody tr td:last-child button').first();
+        this.editButton = page.getByRole('Button', {name: 'Edit'})
+            .or (page.locator('[role="option"]:has-text("Edit"), button:has-text("Edit")'));
+        this.deleteButton = page.locator('[role="option"]:has-text("Delete"), button:has-text("Delete")');
+        
+        // Add/Edit Product Form Fields
+        this.productNameInput = page.locator('#productName');
+        this.categorySelect = page.locator('div[class="product-category-field"] span[class="flex-1 "]');
+        this.category = page.getByText('Electronics');
+        this.priceInput = page.locator('input[placeholder="0.00"]');
+        this.stockInput = page.locator('#stock');
+        this.descriptionInput = page.locator('#description');
+        this.availabilityDropdown = page.getByText('Select Availability')
+            .or (page.getByText('Available')).or (page.getByText('Unavailable'));
+        this.available = page.getByRole('option', { name: 'Available', exact: true }).locator('span');
+        this.unavailable = page.getByRole('option', { name: 'Unavailable', exact: true }).locator('span');
+        this.stockDropdown = page.getByText('Unlimited')
+            .or (page.getByText('Limited'));
+        this.limited = page.getByRole('option', { name: 'Limited', exact: true }).locator('span');
+        this.unlimited = page.getByRole('option', { name: 'Unlimited', exact: true }).locator('span');
+        this.uploadFileInput = page.locator('input[type="file"]');
+        this.editQuestionBtn = page.getByRole('button', { name: /edit question/i });
+        this.addCheckoutQuestionBtn = page.getByRole('button', { name: /add/i }).first();
+        this.addFaqBtn = page.getByRole('button', { name: /add/i }).last();
+        this.saveBtn = page.getByRole('button', { name: 'Save', exact: true });
+        this.saveQuestionBtn = page.getByRole('button', { name: /save question/i });
+        this.saveFaQBtn = page.getByRole('button', { name: /save faq/i });
+        this.modal = page.locator('label[for="question"]');
+        this.questionField = page.locator('#question')
+            .or(page.getByLabel(/question/i));
+        this.answerField = page.locator('#answer')
+            .or(page.getByLabel(/answer/i));
+
+        // Form Buttons
+        this.addButton = page.locator('button:has-text("Add"), button:has-text("Create"), button:has-text("Save")').first();
+        this.updateButton = page.locator('button:has-text("Update"), button:has-text("Save")').first();
+        this.cancelButton = page.locator('button:has-text("Cancel")').first();
+        
+        // Delete Confirmation
+        this.confirmDeleteButton = page.getByRole('button', { name: /confirm/i })
+            .or (page.locator('button:has-text("Delete"), button:has-text("Confirm"), button:has-text("Yes")').last());
+        this.cancelDeleteButton = page.getByRole('button', { name: /cancel/i })
+        .or (page.locator('button:has-text("Cancel"), button:has-text("No")').last());
+        
+        // Reorder Columns Modal
+        this.reorderModal = page.locator('[role="dialog"]').filter({ hasText: /reorder|column/i }).first();
+        this.toggleAllCheckbox = page.locator('input[type="checkbox"]').first();
+        this.saveColumnOrderBtn = page.locator('button:has-text("Save"), button:has-text("Apply")').first();
+        
+        // Drag and Drop
+        this.dragHandles = page.locator('[class*="drag"], [class*="handle"], [draggable="true"]');
+    }
+
+    /**
+     * Navigate to Products page
+     */
+    async navigateToProducts() {
+        await this.productManagementMenu.hover();
+        await this.productManagementMenu.click();
+        await this.productsLink.hover();
+        await this.productsLink.click();
+        await this.page.waitForURL(/products/);
+    }
+
+    /**
+     * Get all column header texts
+     */
+    async getColumnHeaderTexts() {
+        await this.columnHeaders.first().waitFor({ state: 'visible' });
+        return await this.columnHeaders.allTextContents();
+    }
+
+    async verifyColumnHeaders(expectedHeaders = ['ID', 'Products', 'Category', 'Price', 'Quantity', 'Availability','Actions']) {
+        for (const header of expectedHeaders) {
+            const headerLocator = this.page.locator('thead th, [role="columnheader"]')
+                .filter({ hasText: new RegExp(header, 'i') });
+            await headerLocator.first().waitFor({ state: 'visible', timeout: 10000 });
+        }
+    }
+
+    /**
+     * Switch to specific status tab
+     */
+    async switchToTab(tabName) {
+        const tabMap = {
+            'products': this.productsTab,
+            'deleted': this.deletedTab
+        };
+        
+        const tab = tabMap[tabName.toLowerCase()];
+        if (tab) {
+            await tab.click();
+            await this.page.waitForTimeout(5000);
+        }
+    }
+
+    /**
+     * Export products in specified format
+     */
+    async exportProducts(format) {
+        await this.exportBtn.click();
+        
+        const formatMap = {
+            csv: this.csvBtn,
+            xlsx: this.xlsxBtn,
+            pdf: this.pdfBtn
+        };
+
+        const button = formatMap[format.toLowerCase()];
+        if (!button) {
+            throw new Error(`Unknown format: ${format}. Use 'csv', 'xlsx', or 'pdf'`);
+        }
+
+        await button.click();
+    }
+
+
+
+    async addCheckoutQuestion(questionText, type = 'Text') {
+        // Click Add button
+        await this.addCheckoutQuestionBtn.click();
+        
+        // Wait for modal to appear
+        await this.modal.waitFor({ state: 'visible', timeout: 10000 });
+        
+        // Fill in question
+        await this.questionField.fill(questionText);
+        
+        // Save
+        await this.saveQuestionBtn.click();
+        
+        // Wait for modal to close
+        await this.modal.waitFor({ state: 'hidden', timeout: 10000 });
+    }
+
+     // Add FAQ
+    async addNewFAQ(question, answer) {
+    await this.addFaqBtn.click();
+    await this.modal.waitFor({ state: 'visible', timeout: 5000 });
+    
+    await this.questionField.fill(question);
+    await this.answerField.fill(answer);
+    
+    await this.saveFaQBtn.click();
+  }
+
+    /**
+     * Add a new product
+     */
+    async addNewProduct(productData) {
+        const newQuestion = `Test Question ${Date.now()}`;
+        const newAnswer = `Test Answer ${Date.now()}`;
+        // Click Add button
+        await this.addProductButton.click();
+        
+        // Wait for form/modal
+        await this.productNameInput.waitFor({state: 'visible', timeout: 10000});
+        
+        // Fill product name
+        await this.productNameInput.fill(productData.name);
+
+        // Select category if exists
+        if (productData.category && await this.categorySelect.isVisible().catch(() => false)) {
+            await this.categorySelect.selectOption({ label: productData.category });
+        }
+
+        // Fill description if exists
+        if (productData.description && await this.descriptionInput.isVisible().catch(() => false)) {
+            await this.descriptionInput.fill(productData.description);
+        }
+        
+        // Fill price
+        if (productData.price) {
+            await this.priceInput.fill(productData.price.toString());
+        }
+
+        // Fill Availability
+        await this.availabilityDropdown.click();
+        await this.available.click();
+        
+        // Fill stock
+        await this.stockDropdown.click();
+        await this.limited.click();
+        await this.stockInput.fill(productData.stock.toString());
+    
+        //Upload file
+        const filePath = 'tests/fixtures/office_1.jpg';
+        await this.uploadFileInput.setInputFiles(filePath);
+
+        // Add Product checkout question
+        await this.addCheckoutQuestion(newQuestion);
+        console.log('Product Question Added');
+
+        // Add Product FAQ
+        await this.addNewFAQ(newQuestion, newAnswer);
+        console.log('Product FAQ Added');
+        
+        // Save
+        await this.saveBtn.click();
+        
+        // Wait for form to close
+        await this.page.waitForTimeout(2000);
+    }
+
+    /**
+     * Edit a product
+     */
+    async editProduct(newProductData) {
+        // Click actions button in first row
+        const actionsButton = this.page.locator('tbody tr').first().locator('td').last().getByRole('button');
+        await actionsButton.click();
+        await this.page.waitForTimeout(500);
+
+        // Click "View Product Details" option
+        await this.page.evaluate(() => {
+            const options = Array.from(document.querySelectorAll('[role="option"]'));
+            const option = options.find(el => el.textContent.includes('View Product Details'));
+            if (option) option.click();
+        });
+
+        // Click "Edit"
+        await this.editButton.click();
+
+        // Wait for form/modal
+        await this.page.waitForTimeout(1500);
+        
+        // Wait for form/modal
+        await this.productNameInput.waitFor({state: 'visible', timeout: 10000});
+        
+        // Fill product name
+        await this.productNameInput.clear();
+        await this.productNameInput.fill(newProductData.name);
+
+        // Select category if exists
+        if (newProductData.category && await this.categorySelect.isVisible().catch(() => false)) {
+            await this.categorySelect.selectOption({ label: newProductData.category });
+        }
+
+        // Fill description if exists
+        if (newProductData.description && await this.descriptionInput.isVisible().catch(() => false)) {
+            await this.descriptionInput.clear();
+            await this.descriptionInput.fill(newProductData.description);
+        }
+        
+        // Fill price
+        if (newProductData.price) {
+            await this.priceInput.clear();
+            await this.priceInput.fill(newProductData.price.toString());
+        }
+
+        // Fill Availability
+        await this.availabilityDropdown.click();
+        await this.available.click();
+        
+        // Fill stock
+        await this.stockDropdown.click();
+        await this.limited.click();
+        await this.stockInput.clear();
+        await this.stockInput.fill(newProductData.stock.toString());
+     
+        // Save
+        await this.saveBtn.click();
+        
+        // Wait for save to complete
+        await this.page.waitForTimeout(2000);
+    }
+
+    /**
+     * Delete a product
+     */
+    async deleteProduct() {
+        // Click actions button in first row
+        const actionsButton = this.page.locator('tbody tr').first().locator('td').last().getByRole('button');
+        await actionsButton.click();
+        await this.page.waitForTimeout(500);
+
+        // Click "Delete" option
+        await this.page.evaluate(() => {
+            const options = Array.from(document.querySelectorAll('[role="option"]'));
+            const option = options.find(el => el.textContent.includes('Delete Product'));
+            if (option) option.click();
+        });
+
+        // Wait for confirmation dialog
+        await this.page.waitForTimeout(1000);
+        
+        // Confirm deletion
+        await this.confirmDeleteButton.click();
+        
+        // Wait for deletion to complete
+        await this.page.waitForTimeout(2000);
+    }
+
+    /**
+     * Get product count
+     */
+    async getProductCount() {
+        return await this.tableRows.count();
+    }
+
+    /**
+     * Get product name from specific row
+     */
+    async getProductName(rowIndex = 0) {
+        const row = this.tableRows.nth(rowIndex);
+        const nameCell = row.locator('td').nth(1); // Usually second column after checkbox/number
+        return await nameCell.textContent();
+    }
+
+    /**
+     * Verify product exists in table
+     */
+    async verifyProductExists(productName) {
+        const product = this.page.getByText(`${productName}`);
+        await product.waitFor({ state: 'visible', timeout: 10000 });
+    }
+
+    /**
+     * Open reorder columns modal
+     */
+    async openReorderColumns() {
+        await this.reorderColumnsBtn.click();
+        await this.reorderModal.waitFor({ state: 'visible', timeout: 5000 });
+    }
+
+    /**
+     * Toggle all columns
+     */
+    async toggleAllColumns() {
+        await this.toggleAllCheckbox.click();
+        await this.page.waitForTimeout(500);
+    }
+
+    /**
+     * Save column order
+     */
+    async saveColumnOrder() {
+        await this.saveColumnOrderBtn.click();
+        await this.page.waitForTimeout(1000);
+    }
+
+    /**
+     * Reorder products by dragging
+     */
+    async reorderProduct(fromIndex, toIndex) {
+        const fromHandle = this.dragHandles.nth(fromIndex);
+        const toRow = this.tableRows.nth(toIndex);
+        
+        // Drag and drop
+        await fromHandle.dragTo(toRow);
+        
+        // Wait for reorder to complete
+        await this.page.waitForTimeout(1000);
+    }
+
+    /**
+     * Sort by descending order (if sort button exists)
+     */
+    async sortByDescending() {
+        try {
+            // Click the Reorder column sort button (with SVG icon)
+            const sortButton = this.page.locator('th:has-text("ID") button:has(svg)').first();
+            
+            const sortButtonExists = await sortButton.count() > 0;
+            
+            if (sortButtonExists) {
+                await sortButton.click();
+                console.log('✓ Clicked sort dropdown');
+                
+                // Wait for dropdown menu
+                await this.page.waitForTimeout(500);
+                
+                // Click "Sort Descending"
+                const sortDescending = this.page.getByText('Sort Descending', { exact: true });
+                await sortDescending.waitFor({ state: 'visible', timeout: 5000 });
+                await sortDescending.click();
+                
+                console.log('✓ Selected "Sort Descending"');
+                await this.page.waitForTimeout(1000);
+            } else {
+                console.log('⚠️ Sort button not found, skipping sort');
+            }
+        } catch (error) {
+            console.log(`⚠️ Could not sort: ${error.message}`);
+        }
+    }
+
+    /**
+     * Wait for page to load
+     */
+    async waitForPageLoad() {
+        await this.page.waitForLoadState('domcontentloaded');
+        await this.pageTitle.waitFor({ state: 'visible', timeout: 10000 });
+    }
+}

@@ -17,7 +17,7 @@ export default defineConfig({
     retries: process.env.CI ? 3 : 1,
 
     use: {
-        headless: process.env.CI ? true : false,
+        headless: process.env.CI ? true : true,
         // headless: false,
         baseURL: process.env.BASE_URL,
         actionTimeout: process.env.CI ? 150000 : 100000, 

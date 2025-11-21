@@ -1,14 +1,18 @@
 import { defineConfig, devices } from '@playwright/test';
 import dotenv from 'dotenv';
-dotenv.config({ path: `.env.${process.env.env}` });
+
+// Define env with fallback
+const environment = process.env.env || 'qa';
+
+dotenv.config({ path: `.env.${environment}` });
 
 if (!process.env.BASE_URL) {
-    throw new Error(`BASE_URL is not defined. Check your .env.${process.env.env} file`);
+    throw new Error(`BASE_URL is not defined. Check your .env.${environment} file`);
 }
 
 export default defineConfig({
     testDir: './tests/specs',
-    workers: process.env.CI ? 1 : undefined,
+    workers: process.env.CI ? undefined : undefined,
     timeout: process.env.CI ? 1120000 : 1120000,
     expect: {
         timeout: process.env.CI ? 30000 : 20000,
@@ -18,7 +22,7 @@ export default defineConfig({
 
     use: {
         headless: process.env.CI ? true : true,
-        // headless: false,
+        // @ts-ignore
         baseURL: process.env.BASE_URL,
         actionTimeout: process.env.CI ? 150000 : 100000, 
         navigationTimeout: process.env.CI ? 150000 : 100000,
@@ -60,4 +64,3 @@ export default defineConfig({
         ['list'],
     ],
 });
-

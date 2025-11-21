@@ -12,7 +12,7 @@ export class SignUpPage {
     
     // Checkboxes and Buttons
     this.privacyPolicyCheckbox = page.getByText('I agree to ReadyChatAI\'s Terms of Service and Privacy Policy');
-    this.getStartedBtn = page.getByRole('button', { name: /get started/i });
+    this.getStartedBtn = page.getByRole('button', { name: /get started for free/i });
     
     // Social Login Buttons
     this.facebookBtn = page.getByRole('button', { name: /facebook/i });

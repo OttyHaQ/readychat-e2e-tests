@@ -7,23 +7,10 @@ import fs from 'fs';
 import path from 'path';
 
 test.describe('Channels Integration', () => {
-  let testCredentials;
-
-  test.beforeAll(async () => {
-    // Load test credentials
-    try {
-      const credentialsPath = path.join(process.cwd(), 'tests', 'test-credentials.json');
-      const credentialsData = fs.readFileSync(credentialsPath, 'utf-8');
-      testCredentials = JSON.parse(credentialsData);
-      console.log(`✓ Loaded credentials for user: ${testCredentials.username}`);
-    } catch (error) {
-      console.warn('⚠️ Could not load test credentials from file');
-      testCredentials = {
-        username: 'default_user',
-        password: 'default_password'
+  const testCredentials = {
+        username: process.env.USER_NAME2 || 'Test_Business_mi99jyg9_r6vvj',
+        password: process.env.PASSWORD2 || 'P@ssword01'
       };
-    }
-  });
 
   test.beforeEach(async ({ page }) => {
     // Set timeout for each test

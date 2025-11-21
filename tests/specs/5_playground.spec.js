@@ -7,22 +7,11 @@ import fs from 'fs';
 import path from 'path';
 
 test.describe('AI Bot Playground', () => {
-  let testCredentials;
 
-  test.beforeAll(async () => {
-    // Load test credentials
-    try {
-      const credentialsPath = path.join(process.cwd(), 'tests', 'test-credentials.json');
-      testCredentials = JSON.parse(fs.readFileSync(credentialsPath, 'utf-8'));
-      console.log(`✓ Loaded credentials for user: ${testCredentials.username}`);
-    } catch (error) {
-      testCredentials = {
+  const testCredentials = {
         username: process.env.USER_NAME || 'default_user',
         password: process.env.PASSWORD || 'default_password'
       };
-      console.warn('⚠️ Using environment variables for credentials');
-    }
-  });
 
   test.beforeEach(async ({ page }) => {
     test.setTimeout(90000); // 1.5 minutes
@@ -200,7 +189,7 @@ test.describe('AI Bot Playground', () => {
         await aiBotPage.addMoreKnowledgeLink.click();
         
         // Verify navigation to Data Sources
-        await expect(aiBotPage.addSourceBtn).toBeVisible({ timeout: 10000 });
+        await expect(aiBotPage.allQuestionsTab).toBeVisible({ timeout: 10000 });
         console.log('✓ Navigated to Data Sources page');
       });
 

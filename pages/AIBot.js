@@ -14,8 +14,7 @@ export class AIBot {
 
 
     //  ALERTS 
-    this.alert = page.locator('[role="alert"]')
-      .or(page.locator('div[role="alert"] div:nth-child(2)'));
+    this.alert = page.locator('[role="alert"]:not(#__next-route-announcer__)');
     this.alertMessage = page.locator('[role="alert"]').first();
 
 
@@ -69,8 +68,8 @@ export class AIBot {
       .or(page.locator('button:has-text("PDF")'));
 
     //  ADD QUESTION MODAL 
-    this.addQuestionHeader = page.getByRole('heading', { name: /add question and answer/i })
-      .or(page.locator('h3:has-text("Add Question and Answer")'));
+    this.addQuestionHeader = page.getByText(/what are commonly asked questions by customers?/i)
+      .or(page.locator('h3:has-text("What are Commonly Asked Questions By Customers?")'));
     this.questionField = page.locator('#question')
       .or(page.getByLabel(/question/i));
     this.answerField = page.locator('#answer')
@@ -199,7 +198,8 @@ export class AIBot {
     this.maxRepliesField = page.getByRole('spinbutton').nth(0);
     this.maxRepliesDayField = page.getByRole('spinbutton').nth(1);
     this.minLikesField = page.getByRole('spinbutton').nth(2);
-    this.createRuleBtn = page.getByRole('button', { name: /create rule/i }).first();
+    this.createRuleBtn = page.getByRole('button', { name: /create rule/i });
+    this.modalCreateBtn =  page.locator('[data-testid="modal-backdrop"]').getByRole('button', { name: /create rule/i });
     this.saveChangesBtn = page.getByRole('button', { name: /save changes/i });
 
     // Facebook Rules Section
@@ -256,14 +256,12 @@ export class AIBot {
 
   /**
    * Switches to specified tab in Data Sources
-   * @param {string} tabName - 'qna', 'all', 'unanswered', or 'import'
+   * @param {string} tabName -  'all questions', 'unanswered'
    */
   async switchToTab(tabName) {
     const tabMap = {
-      qna: this.qnaTab,
       all: this.allQuestionsTab,
       unanswered: this.unansweredQuestionsTab,
-      import: this.importFilesTab
     };
 
     const tab = tabMap[tabName.toLowerCase()];
@@ -426,7 +424,7 @@ export class AIBot {
       await this.minLikesField.fill(ruleConfig.minLikes.toString());
     }
     
-    await this.createRuleBtn.click();
+    await this.createRuleBtn.last().click();
   }
 
   /**

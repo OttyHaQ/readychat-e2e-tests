@@ -1,3 +1,5 @@
+import { expect } from '@playwright/test';
+
 export class OnboardingPage {
   constructor(page) {
     this.page = page;
@@ -15,7 +17,7 @@ export class OnboardingPage {
     // PERSONAL DETAILS STEP 
     this.firstNameField = page.locator('#first_name');
     this.lastNameField = page.locator('#last_name');
-    this.timeZoneDropdown = page.locator('div[class*="relative w-full"] span[class*="flex-1"]')
+    this.timeZoneDropdown = page.getByRole('button', { name: '(GMT+01:00) Africa/Lagos' })
       .or(page.getByLabel(/time zone/i));
     this.timeZoneFirstOption = page.locator('div[role="option"]').first();
 
@@ -44,8 +46,6 @@ export class OnboardingPage {
     // Currency Selection
     this.currencyDropdown = page.getByRole('button', { name: /\$ USD|Currency/i });
     this.currencySearchField = page.locator('xpath=//input[@placeholder="Search..."]')
-
-    
 
     //  BOT SETTINGS STEP 
     this.introTextField = page.locator('textarea#responses\\.0\\.response')
@@ -233,12 +233,12 @@ export class OnboardingPage {
     await this.page.waitForTimeout(3000);
     await this.currencySearchField.waitFor({ state: 'visible', timeout: 5000 });
     await this.currencySearchField.fill(data.currency);
-    await this.page.waitForTimeout(500); // Wait for search results
     
-    // Click the specific currency option
-    await this.page.getByRole('option', { name: data.currency }).click();
+    // Select timezone
+    await this.timeZoneDropdown.click();
+    await this.timeZoneFirstOption.waitFor({ state: 'visible', timeout: 5000 });
+    await this.timeZoneFirstOption.click();
     
-    // Proceed to next step
     await this.nextBtn.click();
   }
 
@@ -283,21 +283,10 @@ export class OnboardingPage {
    * @param {string} timeZoneSearch - Optional timezone search text
    */
   async completeBusinessSchedule(timeZoneSearch = null) {
-    timeZoneSearch = timeZoneSearch || this.testData.timeZoneSearch;
     
     // Click Get Started button
     await this.getStartedBtn.waitFor({ state: 'visible', timeout: 10000 });
     await this.getStartedBtn.click();
-    
-    // Select timezone
-    await this.scheduleTimeZoneDropdown.waitFor({ state: 'visible', timeout: 10000 });
-    await this.scheduleTimeZoneDropdown.click();
-    
-    await this.searchField.waitFor({ state: 'visible', timeout: 5000 });
-    await this.searchField.fill(timeZoneSearch);
-    await this.page.waitForTimeout(500);
-    
-    await this.dropdownOption.first().click();
     
     // Select all days of the week
     await this.selectAllDays();

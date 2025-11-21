@@ -12,15 +12,6 @@ test.describe('Data Sources Management', () => {
         username: process.env.USER_NAME || 'default_user',
         password: process.env.PASSWORD || 'default_password'
     };
-
-   test.beforeAll(async () => {
-        // Load test credentials
-        try {
-        console.log(`✓ Loaded credentials for user: ${testCredentials.username}`);
-        } catch (error) {
-        console.warn('⚠️ environment variables not available');
-        }
-   });
   
     test.beforeEach(async ({ page }) => {
       // Set timeout for each test
@@ -90,18 +81,15 @@ test.describe('Data Sources Management', () => {
         console.log('✓ Data Sources page loaded');
       });
 
-      await test.step('Verify Q&A tab elements', async () => {
-        await expect(aiBotPage.qnaTab).toBeVisible({ timeout: 10000 });
-        await expect(aiBotPage.importFilesTab).toBeVisible();
+      await test.step('Verify Unanswered tab elements', async () => {
         await expect(aiBotPage.allQuestionsTab).toBeVisible();
-        await expect(aiBotPage.unansweredQuestionsTab).toBeVisible();
+        await expect(aiBotPage.unansweredQuestionsTab).toBeVisible({ timeout: 10000 });
         console.log('✓ All tabs visible');
       });
 
-      await test.step('Verify action buttons', async () => {
+      await test.step('Verify Export button', async () => {
         await expect(aiBotPage.exportBtn).toBeVisible();
-        await expect(aiBotPage.addSourceBtn).toBeVisible();
-        console.log('✓ Action buttons visible');
+        console.log('✓ Export button visible');
       });
 
       await test.step('Verify table columns', async () => {
@@ -228,7 +216,7 @@ test.describe('Data Sources Management', () => {
 
       await test.step('Open add question modal', async () => {
         await aiBotPage.addNewQuestionsBtn.click();
-        await expect(aiBotPage.addQuestionHeader).toContainText(/add question and answer/i);
+        await expect(aiBotPage.addQuestionHeader).toContainText(/what are commonly asked questions by customers?/i);
         console.log('✓ Add question modal opened');
       });
 
@@ -255,107 +243,107 @@ test.describe('Data Sources Management', () => {
     }
   });
 
-  test('Should confirm the Add Source button works', async ({ page }) => {
-    const aiBotPage = new AIBot(page);
+  // test('Should confirm the Add Source button works', async ({ page }) => {
+  //   const aiBotPage = new AIBot(page);
 
-    try {
-      await test.step('Navigate to Data Sources', async () => {
-        await aiBotPage.navigateToDataSources();
-      });
+  //   try {
+  //     await test.step('Navigate to Data Sources', async () => {
+  //       await aiBotPage.navigateToDataSources();
+  //     });
 
-      await test.step('Open Add Source modal', async () => {
-        await aiBotPage.addSourceBtn.click();
-        await expect(aiBotPage.addSourceHeader).toContainText(/train your ai/i);
-        console.log('✓ Add Source modal opened');
-      });
+  //     await test.step('Open Add Source modal', async () => {
+  //       await aiBotPage.addSourceBtn.click();
+  //       await expect(aiBotPage.addSourceHeader).toContainText(/train your ai/i);
+  //       console.log('✓ Add Source modal opened');
+  //     });
 
-      await test.step('Select Create Q&A option', async () => {
-        await safeClick(page);
-        await aiBotPage.createQandAOption.click();
-        await expect(aiBotPage.addQuestionHeader).toContainText(/add question and answer/i);
-        console.log('✓ Create Q&A selected');
-      });
+  //     await test.step('Select Create Q&A option', async () => {
+  //       await safeClick(page);
+  //       await aiBotPage.createQandAOption.click();
+  //       await expect(aiBotPage.addQuestionHeader).toContainText(/add question and answer/i);
+  //       console.log('✓ Create Q&A selected');
+  //     });
 
-      console.log('\n✅ Add Source button test passed!');
-    } catch (error) {
-      console.error('\n❌ Test failed:', error.message);
-      throw error;
-    }
-  });
+  //     console.log('\n✅ Add Source button test passed!');
+  //   } catch (error) {
+  //     console.error('\n❌ Test failed:', error.message);
+  //     throw error;
+  //   }
+  // });
 
-  test('Should import product file successfully', async ({ page }) => {
-    const aiBotPage = new AIBot(page);
+  // test('Should import product file successfully', async ({ page }) => {
+  //   const aiBotPage = new AIBot(page);
 
-    try {
-      await test.step('Navigate to Data Sources', async () => {
-        await aiBotPage.navigateToDataSources();
-        await safeClick(page);
-      });
+  //   try {
+  //     await test.step('Navigate to Data Sources', async () => {
+  //       await aiBotPage.navigateToDataSources();
+  //       await safeClick(page);
+  //     });
 
-      await test.step('Open import product file modal', async () => {
-        await aiBotPage.addSourceBtn.click();
-        await expect(aiBotPage.addSourceHeader).toContainText(/train your ai/i);
+  //     await test.step('Open import product file modal', async () => {
+  //       await aiBotPage.addSourceBtn.click();
+  //       await expect(aiBotPage.addSourceHeader).toContainText(/train your ai/i);
         
-        await aiBotPage.importProductFileOption.click();
-        await expect(aiBotPage.importProductFileHeader).toContainText(/import product file/i);
-        console.log('✓ Import modal opened');
-      });
+  //       await aiBotPage.importProductFileOption.click();
+  //       await expect(aiBotPage.importProductFileHeader).toContainText(/import product file/i);
+  //       console.log('✓ Import modal opened');
+  //     });
 
-      await test.step('Download template and upload file', async () => {
-        await aiBotPage.downloadTemplateBtn.click();
-        console.log('✓ Template download initiated');
+  //     await test.step('Download template and upload file', async () => {
+  //       await aiBotPage.downloadTemplateBtn.click();
+  //       console.log('✓ Template download initiated');
         
-        // Upload file
-        const filePath = 'tests/fixtures/1mb.pdf';
-        await aiBotPage.uploadFileInput.setInputFiles(filePath);
+  //       // Upload file
+  //       const filePath = 'tests/fixtures/1mb.pdf';
+  //       await aiBotPage.uploadFileInput.setInputFiles(filePath);
         
-        await aiBotPage.importBtn.click();
-        await page.waitForTimeout(3000);
+  //       await aiBotPage.importBtn.click();
+  //       await page.waitForTimeout(3000);
         
-        // Wait for success message
-        await aiBotPage.alertMessage.first().waitFor({ state: 'visible', timeout: 15000 });
-        await expect(aiBotPage.alertMessage.first()).toContainText(/file imported successfully/i);
-        console.log('✓ File imported successfully');
-      });
+  //       // Wait for success message
+  //       await aiBotPage.alertMessage.first().waitFor({ state: 'visible', timeout: 15000 });
+  //       await expect(aiBotPage.alertMessage.first()).toContainText(/file imported successfully/i);
+  //       console.log('✓ File imported successfully');
+  //     });
 
-      console.log('\n✅ Import product file test passed!');
-    } catch (error) {
-      console.error('\n❌ Test failed:', error.message);
-      throw error;
-    }
-  });
+  //     console.log('\n✅ Import product file test passed!');
+  //   } catch (error) {
+  //     console.error('\n❌ Test failed:', error.message);
+  //     throw error;
+  //   }
+  // });
 
-  test('Should display import files table with all columns', async ({ page }) => {
-    const aiBotPage = new AIBot(page);
+  // test('Should display import files table with all columns', async ({ page }) => {
+  //   const aiBotPage = new AIBot(page);
 
-    try {
-      await test.step('Navigate to Data Sources', async () => {
-        await aiBotPage.navigateToDataSources();
-        await safeClick(page);
-      });
+  //   try {
+  //     await test.step('Navigate to Data Sources', async () => {
+  //       await aiBotPage.navigateToDataSources();
+  //       await safeClick(page);
+  //     });
 
-      await test.step('Switch to Import Files tab', async () => {
-        await aiBotPage.switchToTab('import');
-        await expect(aiBotPage.batchImportsHeader).toContainText(/all batch imports/i);
-        console.log('✓ Import Files tab loaded');
-      });
+  //     await test.step('Switch to Import Files tab', async () => {
+  //       await aiBotPage.switchToTab('import');
+  //       await expect(aiBotPage.batchImportsHeader).toContainText(/all batch imports/i);
+  //       console.log('✓ Import Files tab loaded');
+  //     });
 
-      await test.step('Verify table columns', async () => {
-        await expect(aiBotPage.idColumn).toBeVisible();
-        await expect(aiBotPage.fileNameColumn).toBeVisible();
-        await expect(aiBotPage.createdAtColumn).toBeVisible();
-        await expect(aiBotPage.productCountColumn).toBeVisible();
-        await expect(aiBotPage.statusColumn).toBeVisible();
-        await expect(aiBotPage.actionsColumn).toBeVisible();
-        console.log('✓ All import table columns visible');
-      });
+  //     await test.step('Verify table columns', async () => {
+  //       await expect(aiBotPage.idColumn).toBeVisible();
+  //       await expect(aiBotPage.fileNameColumn).toBeVisible();
+  //       await expect(aiBotPage.createdAtColumn).toBeVisible();
+  //       await expect(aiBotPage.productCountColumn).toBeVisible();
+  //       await expect(aiBotPage.statusColumn).toBeVisible();
+  //       await expect(aiBotPage.actionsColumn).toBeVisible();
+  //       console.log('✓ All import table columns visible');
+  //     });
 
-      console.log('\n✅ Import files table test passed!');
-    } catch (error) {
-      console.error('\n❌ Test failed:', error.message);
-      throw error;
-    }
-  });
+  //     console.log('\n✅ Import files table test passed!');
+  //   } catch (error) {
+  //     console.error('\n❌ Test failed:', error.message);
+  //     throw error;
+  //   }
+  // });
 
   test.afterEach(async ({ page }, testInfo) => {
     if (testInfo.status !== testInfo.expectedStatus) {

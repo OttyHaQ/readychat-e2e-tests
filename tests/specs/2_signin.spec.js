@@ -5,36 +5,20 @@ import { DashboardPage } from '../../pages/DashboardPage.js';
 import { safeClick, expectTextContains, fullUrl } from '../../utils/helpers.js';
 import fs from 'fs';
 import path from 'path';
+import { AIBot } from '../../pages/AIBot.js';
 
 test.describe('User Sign In Flow', () => {
-  let testCredentials;
-
-  test.beforeEach(async ({ page }) => {
-    // Set default timeout
-    test.setTimeout(60000); // 1 minute for sign-in tests
-
-    // Load test credentials from the signup test
-    try {
-      const credentialsPath = path.join(process.cwd(), 'tests', 'test-credentials.json');
-      const credentialsData = fs.readFileSync(credentialsPath, 'utf-8');
-      testCredentials = JSON.parse(credentialsData);
-      console.log(`Loaded credentials for user: ${testCredentials.username}`);
-    } catch (error) {
-      console.warn('⚠️ Could not load test credentials. Some tests may fail.');
-      // Provide fallback credentials for tests that don't depend on signup
-      testCredentials = {
-        username: 'test_user',
-        password: 'test_password',
-        email: 'test@example.com'
+  const testCredentials = {
+        username: process.env.USER_NAME || 'default_user',
+        password: process.env.PASSWORD || 'default_password'
       };
-    }
-  });
 
   test('Should successfully sign in with valid credentials', async ({ page }) => {
     // Initialize Page Objects 
     const landingPage = new LandingPage(page);
     const signInPage = new SignInPage(page);
     const dashboardPage = new DashboardPage(page);
+    const aiBotPage = new AIBot(page);
 
     try {
       // Navigate to Landing Page 
@@ -64,10 +48,9 @@ test.describe('User Sign In Flow', () => {
 
       // Verify Successful Authentication 
       await test.step('Verify successful authentication', async () => {
-        // Wait for success alert
-        await expect(page.getByText(/authentication successful/i)).toBeVisible({ 
-          timeout: 10000 
-        });
+        
+      // Wait for success message
+          await expect(aiBotPage.alert.first()).toContainText(/successful/i, { timeout: 10000 });
         console.log('✓ Authentication successful message displayed');
       });
 

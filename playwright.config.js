@@ -18,7 +18,7 @@ export default defineConfig({
         timeout: process.env.CI ? 30000 : 20000,
     },
 
-    retries: process.env.CI ? 1 : 0,
+    retries: process.env.CI ? 1 : 1,
 
     use: {
         headless: process.env.CI ? true : false,

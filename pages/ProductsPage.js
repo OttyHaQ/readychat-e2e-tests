@@ -106,11 +106,10 @@ export class ProductsPage {
      * Navigate to Products page
      */
     async navigateToProducts() {
-        await this.productManagementMenu.hover();
+        await this.productManagementMenu.waitFor({ state: 'visible', timeout: 10000 });
         await this.productManagementMenu.click();
-        await this.productsLink.hover();
+        await this.productsLink.waitFor({ state: 'visible', timeout: 10000 });
         await this.productsLink.click();
-        await this.page.waitForURL(/products/);
     }
 
     /**

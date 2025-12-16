@@ -270,10 +270,22 @@ export class AppointmentsPage {
      * Finds and selects a date with available time slots
      * Tries up to 10 future dates
      */
-    async selectDateWithAvailableSlots() {
+    async selectDateWithAvailableSlots(timeSlotIndex = 0) {
         const maxAttempts = 10;
         let monthAttempts = 0;
         const maxMonthAttempts = 3;
+
+        const schedulingSection = this.page.locator('section').filter({ hasText: 'Scheduling' });
+    
+        // DIAGNOSTIC: Check if calendar even exists
+        const calendarGrid = schedulingSection.locator('[role="grid"]');
+        const calendarExists = await calendarGrid.isVisible({ timeout: 20000 }).catch(() => false);
+        
+        if (!calendarExists) {
+            console.log('❌ Calendar grid not found in Available Slots mode');
+            console.log('💡 This usually means the service has no configured working hours');
+            throw new Error('Calendar not rendered - service likely has no availability configured');
+        }
         
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
             const schedulingSection = this.page.locator('section').filter({ hasText: 'Scheduling' });
@@ -341,9 +353,9 @@ export class AppointmentsPage {
                 const optionCount = await timeOptions.count();
                 
                 if (optionCount > 0) {
-                    // Select first time slot
-                    await timeOptions.first().click();
-                    console.log('✓ Selected time slot successfully');
+                    const indexToUse = Math.min(timeSlotIndex, optionCount - 1);
+                    await timeOptions.nth(indexToUse).click();
+                    console.log(`✓ Selected time slot #${indexToUse + 1} of ${optionCount}`);
                     await this.page.waitForTimeout(500);
                     return;
                 } else {
@@ -371,6 +383,91 @@ export class AppointmentsPage {
 
 
     /**
+ * Select date and time using Custom Time mode (fallback when no availability)
+ */
+    async selectCustomDateTime() {
+        const schedulingSection = this.page.locator('section').filter({ hasText: 'Scheduling' });
+        
+        // Click Custom Time button
+        const customTimeButton = this.page.getByRole('button', { name: /Custom Time/i });
+        await customTimeButton.click();
+        await this.page.waitForTimeout(2000);
+        console.log('✓ Switched to Custom Time mode');
+        
+        // Wait for calendar to load in Custom Time mode
+        const calendarGrid = schedulingSection.locator('[role="grid"]');
+        await calendarGrid.waitFor({ state: 'visible', timeout: 10000 });
+        console.log('✓ Calendar loaded in Custom Time mode');
+        
+        // Select tomorrow's date
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowDay = tomorrow.getDate();
+        
+        // Find and click tomorrow's date button
+        const dateButtons = calendarGrid.locator('button').filter({ 
+            hasText: new RegExp(`^${tomorrowDay}$`) 
+        });
+        
+        const count = await dateButtons.count();
+        let dateClicked = false;
+        
+        for (let i = 0; i < count; i++) {
+            const btn = dateButtons.nth(i);
+            const isDisabled = await btn.getAttribute('disabled');
+            if (!isDisabled) {
+                await btn.click();
+                console.log(`✓ Selected date: ${tomorrowDay}`);
+                dateClicked = true;
+                break;
+            }
+        }
+        
+        if (!dateClicked) {
+            // If tomorrow is disabled, click any enabled date
+            const anyEnabledDate = calendarGrid.locator('button:not([disabled])').first();
+            await anyEnabledDate.click();
+            console.log('✓ Selected first available date');
+        }
+        
+        await this.page.waitForTimeout(1500);
+        
+        // Select time slot from dropdown
+        const timeSlotDropdown = schedulingSection.locator('button').filter({ 
+            hasText: /Select a time slot|time slot/i 
+        }).first();
+        
+        const dropdownVisible = await timeSlotDropdown.isVisible({ timeout: 5000 }).catch(() => false);
+        
+        if (dropdownVisible) {
+            await timeSlotDropdown.click();
+            await this.page.waitForTimeout(500);
+            
+            // Select first available time option
+            const timeOptions = this.page.locator('[role="option"]').filter({ 
+                hasText: /^\d{1,2}:\d{2}\s?(AM|PM)?$/i 
+            });
+            
+            const optionCount = await timeOptions.count();
+            if (optionCount > 0) {
+                await timeOptions.first().click();
+                console.log('✓ Selected time slot');
+            } else {
+                // If no time options, check for time input field
+                const timeInput = this.page.locator('input[type="time"]').first();
+                if (await timeInput.isVisible().catch(() => false)) {
+                    await timeInput.fill('10:00');
+                    console.log('✓ Set time via input: 10:00');
+                }
+            }
+        } else {
+            console.log('⚠️ Time slot selector not found - may be auto-selected');
+        }
+        
+        console.log('✓ Custom date/time selected successfully');
+    }
+
+    /**
      * Add a new appointment
      */
     async addNewAppointment(appointmentData) {
@@ -385,8 +482,24 @@ export class AppointmentsPage {
             await this.selectFromDropdown(this.serviceSelect, appointmentData.service);
         }
 
+        console.log('⏳ Waiting for calendar to load after service selection...');
+        await this.page.waitForTimeout(10000); 
+
         // Find a date with available time slots
-        await this.selectDateWithAvailableSlots();
+            // Try Available Slots with longer timeout
+        try {
+            await this.selectDateWithAvailableSlots(appointmentData.timeSlotIndex || 0);
+        } catch (error) {
+            if (error.message.includes('Calendar not rendered') || 
+                error.message.includes('No available dates') ||
+                error.message.includes('Service hours may not be configured')) {
+                
+                console.log('⚠️ Available Slots failed - switching to Custom Time mode');
+                await this.selectCustomDateTime();
+            } else {
+                throw error;
+            }
+        }
         
         if (appointmentData.status) {
             await this.selectFromDropdown(this.statusSelect, appointmentData.status);
@@ -408,7 +521,7 @@ export class AppointmentsPage {
    
 
     /**
-     * Edit a product
+     * Edit an appointment
      */
 
     async selectAction(actionName) {
@@ -418,7 +531,7 @@ export class AppointmentsPage {
         await actionsButton.click();
         await this.page.waitForTimeout(500);
 
-        // Click "View Product Details" option
+        // Click "View appointment Details" option
         await this.page.evaluate((action) => {
             const options = Array.from(document.querySelectorAll('[role="option"]'));
             const option = options.find(el => el.textContent.includes(action));

@@ -352,7 +352,7 @@ export class Orders {
   async deleteOrder() {
     await this._clickDropdownOption('Delete Order');
     await this.confirmBtn.first().waitFor({ state: 'visible', timeout: 10000 });
-    await this.confirmBtn.first().click();
+    await this.confirmBtn.first().click({ force: true });
   }
 
   /**

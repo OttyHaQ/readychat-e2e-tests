@@ -189,7 +189,7 @@ test.describe('AI Bot Playground', () => {
         await aiBotPage.addMoreKnowledgeLink.click();
         
         // Verify navigation to Data Sources
-        await expect(aiBotPage.allQuestionsTab).toBeVisible({ timeout: 10000 });
+        await expect(aiBotPage.answeredQuestionsTab).toBeVisible({ timeout: 10000 });
         console.log('✓ Navigated to Data Sources page');
       });
 

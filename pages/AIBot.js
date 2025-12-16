@@ -21,9 +21,8 @@ export class AIBot {
     //  DATA SOURCES - Q&A SECTION 
     this.qnaTab = page.getByRole('tab', { name: /q and a|q&a/i })
       .or(page.locator('span:has-text("Q and A")'));
-    this.allQuestionsTab = page.getByText('All Questions (0)')
-      .or(page.locator('span:has-text("All Questions")'));
-    this.unansweredQuestionsTab = page.getByText('Unanswered Questions (0)')
+    this.answeredQuestionsTab = page.getByText('Answered Questions', { exact: true });
+    this.unansweredQuestionsTab = page.getByText('Unanswered Questions')
       .or(page.locator('div[data-tour-target="faq-table"] span:has-text("Unanswered")'));
 
     // Table Columns
@@ -143,7 +142,7 @@ export class AIBot {
     this.sendMessageBtn = page.locator('.bg-brand-secondary-gradient.rounded-full')
       .or(page.getByRole('button', { name: /send/i }));
     this.sentMessage = page.locator('main').getByText(/want to make an order/i);
-    this.addMoreKnowledgeLink = page.getByRole('link', { name: /add more/i })
+    this.addMoreKnowledgeLink = page.getByRole('link', { name: /add more knowledge/i })
       .or(page.locator('p.text-blue-600 a'));
 
     //  CONFIGURE 
@@ -158,10 +157,10 @@ export class AIBot {
       toggle1: page.locator('.gap-2 > .flex > .relative > .w-12').nth(0),
       toggle2: page.locator('.gap-2 > .flex > .relative > .w-12').nth(1),
       toggle3: page.locator('.gap-2 > .flex > .relative > .w-12').nth(2),
-      toggle4: page.locator('.gap-2 > .flex > .relative > .w-12').nth(3),
-      toggle5: page.locator('.gap-2 > .flex > .relative > .w-12').nth(4),
-      toggle6: page.locator('.gap-2 > .flex > .relative > .w-12').nth(5),
-      toggle7: page.locator('.gap-2 > .flex > .relative > .w-12').nth(6)
+      toggle4: page.locator('.gap-2 > .flex > .relative > .w-12').nth(3)
+      // toggle5: page.locator('.gap-2 > .flex > .relative > .w-12').nth(4),
+      // toggle6: page.locator('.gap-2 > .flex > .relative > .w-12').nth(5),
+      // toggle7: page.locator('.gap-2 > .flex > .relative > .w-12').nth(6)
     };
 
     // AI Model Selection
@@ -258,19 +257,24 @@ export class AIBot {
    * Switches to specified tab in Data Sources
    * @param {string} tabName -  'all questions', 'unanswered'
    */
-  async switchToTab(tabName) {
-    const tabMap = {
-      all: this.allQuestionsTab,
-      unanswered: this.unansweredQuestionsTab,
-    };
+  
 
-    const tab = tabMap[tabName.toLowerCase()];
-    if (!tab) {
-      throw new Error(`Unknown tab: ${tabName}`);
-    }
-
-    await tab.waitFor({ state: 'visible', timeout: 10000 });
-    await tab.click();
+    async switchToTab(tabName) {
+      const tabs = {
+          unaswered: this.unansweredQuestionsTab,
+          answered: this.answeredQuestionsTab
+      };
+      
+      const tab = tabs[tabName.toLowerCase()];
+      if (!tab) {
+          throw new Error(`Unknown tab: ${tabName}. Use 'answered' or 'unanswered'`);
+      }
+      
+      await tab.waitFor({ state: 'visible', timeout: 10000 });
+      await tab.click();
+      await this.page.waitForTimeout(1000); // Wait for content to load
+      
+      console.log(`✓ Switched to ${tabName} tab`);
   }
 
   /**

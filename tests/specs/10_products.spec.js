@@ -271,6 +271,7 @@ test.describe('Products Management', () => {
     test('Verify user can add new product', async ({ page }) => {
         const productsPage = new ProductsPage(page);
         const aiBotPage = new AIBot(page);
+        // In test file (10_products.spec.js)
         const newProduct = {
             name: `Test Product ${Date.now()}`,
             price: '99.99',

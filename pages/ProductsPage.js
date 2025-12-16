@@ -75,9 +75,10 @@ export class ProductsPage {
         this.saveBtn = page.getByRole('button', { name: 'Save', exact: true });
         this.saveQuestionBtn = page.getByRole('button', { name: /save question/i });
         this.saveFaQBtn = page.getByRole('button', { name: /save faq/i });
-        this.modal = page.locator('label[for="question"]');
+        this.checkOutQstnModal = page.getByText('Add New Question');
         this.questionField = page.locator('#question')
             .or(page.getByLabel(/question/i));
+        this.faqModal = page.getByText('Add New FAQ');
         this.answerField = page.locator('#answer')
             .or(page.getByLabel(/answer/i));
 
@@ -166,12 +167,13 @@ export class ProductsPage {
 
 
 
-    async addCheckoutQuestion(questionText, type = 'Text') {
-        // Click Add button
+    async addCheckoutQuestion() {
+         const questionText = `Temp question ${Date.now()}`;        
+         // Click Add button
         await this.addCheckoutQuestionBtn.click();
         
         // Wait for modal to appear
-        await this.modal.waitFor({ state: 'visible', timeout: 10000 });
+        await this.checkOutQstnModal.waitFor({ state: 'visible', timeout: 10000 });
         
         // Fill in question
         await this.questionField.fill(questionText);
@@ -180,78 +182,63 @@ export class ProductsPage {
         await this.saveQuestionBtn.click();
         
         // Wait for modal to close
-        await this.modal.waitFor({ state: 'hidden', timeout: 10000 });
+        await this.checkOutQstnModal.waitFor({ state: 'hidden', timeout: 10000 });
     }
 
      // Add FAQ
-    async addNewFAQ(question, answer) {
+    async addNewFAQ() {
+    const question = `Temp question ${Date.now()}`; 
+    const answer = `Temp answer ${Date.now()}`; 
     await this.addFaqBtn.click();
-    await this.modal.waitFor({ state: 'visible', timeout: 5000 });
+    await this.faqModal.waitFor({ state: 'visible', timeout: 5000 });
     
     await this.questionField.fill(question);
     await this.answerField.fill(answer);
     
     await this.saveFaQBtn.click();
+    await this.faqModal.waitFor({ state: 'hidden', timeout: 10000 });
   }
 
     /**
      * Add a new product
      */
     async addNewProduct(productData) {
-        const newQuestion = `Test Question ${Date.now()}`;
-        const newAnswer = `Test Answer ${Date.now()}`;
-        // Click Add button
         await this.addProductButton.click();
-        
-        // Wait for form/modal
-        await this.productNameInput.waitFor({state: 'visible', timeout: 10000});
-        
-        // Fill product name
         await this.productNameInput.fill(productData.name);
-
-        // Select category if exists
-        if (productData.category && await this.categorySelect.isVisible().catch(() => false)) {
-            await this.categorySelect.selectOption({ label: productData.category });
-        }
-
-        // Fill description if exists
-        if (productData.description && await this.descriptionInput.isVisible().catch(() => false)) {
+        
+        // Always select category (required field)
+        await this.categorySelect.click();
+        await this.page.waitForTimeout(500);
+        
+        // Get first real category (exclude "Add New Category")
+        const firstCategory = this.page
+            .getByRole('option')
+            .filter({ hasNotText: /add new category/i })
+            .first();
+        await firstCategory.click();
+        
+        // Fill description
+        if (productData.description) {
             await this.descriptionInput.fill(productData.description);
         }
         
         // Fill price
-        if (productData.price) {
-            await this.priceInput.fill(productData.price.toString());
-        }
-
-        // Fill Availability
+        await this.priceInput.fill(productData.price);
+        
+        // Select availability (REQUIRED)
         await this.availabilityDropdown.click();
-        await this.available.click();
+        await this.available.click(); // or appropriate option
         
-        // Fill stock
+        // Set stock to Limited and fill quantity (NEW - matches editProduct pattern)
         await this.stockDropdown.click();
-        await this.limited.click();
-        await this.stockInput.fill(productData.stock.toString());
-    
-        //Upload file
-        const filePath = 'tests/fixtures/office_1.jpg';
-        await this.uploadFileInput.setInputFiles(filePath);
-
-        // Add Product checkout question
-        await this.addCheckoutQuestion(newQuestion);
-        console.log('Product Question Added');
-
-        // Add Product FAQ
-        await this.addNewFAQ(newQuestion, newAnswer);
-        console.log('Product FAQ Added');
+        await this.limited.click(); // This reveals the stock input field
+        await this.stockInput.fill(productData.stock);
         
-        // Save
+        await this.addCheckoutQuestion();
+        await this.addNewFAQ();
+        
         await this.saveBtn.click();
-        
-        // Wait for form to close
-        await this.page.waitForTimeout(2000);
     }
-
     /**
      * Edit a product
      */
@@ -282,9 +269,15 @@ export class ProductsPage {
         await this.productNameInput.fill(newProductData.name);
 
         // Select category if exists
-        if (newProductData.category && await this.categorySelect.isVisible().catch(() => false)) {
-            await this.categorySelect.selectOption({ label: newProductData.category });
-        }
+        // Always select category (required field)
+        await this.categorySelect.click();
+        await this.page.waitForTimeout(500);
+
+       const firstCategory = this.page
+            .getByRole('option')
+            .filter({ hasNotText: /add new category/i })
+            .first();
+        await firstCategory.click();
 
         // Fill description if exists
         if (newProductData.description && await this.descriptionInput.isVisible().catch(() => false)) {

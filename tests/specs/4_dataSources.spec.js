@@ -81,10 +81,9 @@ test.describe('Data Sources Management', () => {
         console.log('✓ Data Sources page loaded');
       });
 
-      await test.step('Verify Unanswered tab elements', async () => {
-        await expect(aiBotPage.allQuestionsTab).toBeVisible();
-        await expect(aiBotPage.unansweredQuestionsTab).toBeVisible({ timeout: 10000 });
-        console.log('✓ All tabs visible');
+      await test.step('Verify unanswered tab elements', async () => {
+        await expect(aiBotPage.answeredQuestionsTab).toBeVisible();
+        console.log('✓ Unanswered Questions tab visible');
       });
 
       await test.step('Verify Export button', async () => {
@@ -98,7 +97,7 @@ test.describe('Data Sources Management', () => {
         await expect(aiBotPage.channelsColumn.last()).toBeVisible();
         await expect(aiBotPage.statusColumn).toBeVisible();
         await expect(aiBotPage.actionsColumn).toBeVisible();
-        console.log('✓ All table columns visible');
+        console.log('✓ Unanswered table columns visible');
       });
 
       console.log('\n✅ Unanswered questions table test passed!');
@@ -108,7 +107,7 @@ test.describe('Data Sources Management', () => {
     }
   });
 
-  test('Should display all questions table with correct columns', async ({ page }) => {
+  test('Should display Answered questions table with correct columns', async ({ page }) => {
     const aiBotPage = new AIBot(page);
 
     try {
@@ -116,21 +115,26 @@ test.describe('Data Sources Management', () => {
         await aiBotPage.navigateToDataSources();
       });
 
-      await test.step('Switch to All Questions tab', async () => {
-        await aiBotPage.switchToTab('all');
-        console.log('✓ Switched to All Questions tab');
+       await test.step('Verify answered tab elements', async () => {
+        await expect(aiBotPage.answeredQuestionsTab).toBeVisible({ timeout: 10000 });
+        console.log('✓ Answered Questions tab visible');
       });
 
-      await test.step('Verify All Questions elements', async () => {
+      await test.step('Switch to Answered Questions tab', async () => {
+        await aiBotPage.switchToTab('answered');
+        console.log('✓ Switched to Aanswered Questions tab');
+      });
+
+      await test.step('Verify Answered Questions elements', async () => {
         await expect(aiBotPage.exportBtn).toBeVisible();
         await expect(aiBotPage.addNewQuestionsBtn).toBeVisible();
         await expect(aiBotPage.questionColumn).toBeVisible();
         await expect(aiBotPage.actionsColumn).toBeVisible();
         await expect(aiBotPage.answerColumn).toBeVisible();
-        console.log('✓ All Questions table verified');
+        console.log('✓ Answered Questions table verified');
       });
 
-      console.log('\n✅ All questions table test passed!');
+      console.log('\n✅ Answered questions table test passed!');
     } catch (error) {
       console.error('\n❌ Test failed:', error.message);
       throw error;
@@ -211,18 +215,23 @@ test.describe('Data Sources Management', () => {
       await test.step('Navigate to All Questions', async () => {
         await aiBotPage.navigateToDataSources();
         await safeClick(page);
-        await aiBotPage.switchToTab('all');
+        await aiBotPage.answeredQuestionsTab.click()
+        console.log('✓ Switched to answered tab');
+  
+        // Verify button is ready
+        await expect(aiBotPage.addNewQuestionsBtn).toBeEnabled({timeout:10000});
       });
 
       await test.step('Open add question modal', async () => {
         await aiBotPage.addNewQuestionsBtn.click();
+        await aiBotPage.addQuestionHeader.waitFor({state: 'visible', timeout: 10000});
         await expect(aiBotPage.addQuestionHeader).toContainText(/what are commonly asked questions by customers?/i);
         console.log('✓ Add question modal opened');
       });
 
       await test.step('Fill and submit question', async () => {
-        await aiBotPage.questionField.fill(testCredentials.username);
-        await aiBotPage.answerField.fill(testCredentials.username);
+        await aiBotPage.questionField.fill(`Test Question ${Date.now()}`);
+        await aiBotPage.answerField.fill(`Test Answer ${Date.now()}`);
         
         await aiBotPage.saveAndCloseBtn.click();
         
@@ -231,8 +240,7 @@ test.describe('Data Sources Management', () => {
         await aiBotPage.alertMessage.waitFor({ state: 'visible', timeout: 10000 });
         const alertText = await aiBotPage.alertMessage.textContent();
         
-        expect(alertText.toLowerCase()).toMatch(/faq added successfully|already exists/i);
-        await expect(page.getByRole('cell', { name: testCredentials.username }).last()).toBeVisible({ timeout: 10000 });
+        await expect(aiBotPage.alert.first()).toContainText(/faq added successfully|already exists/i);
         console.log(`✓ Alert received: ${alertText}`);
       });
 

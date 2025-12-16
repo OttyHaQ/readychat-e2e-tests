@@ -484,7 +484,7 @@ test.describe('Appointments', () => {
                 
             });
 
-            console.log('\n✅ Cance Rescheduling Appointment test passed!');
+            console.log('\n✅ Cancel Rescheduling Appointment test passed!');
         } catch (error) {
             console.error('\n❌ Test failed:', error.message);
             throw error;

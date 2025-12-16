@@ -205,7 +205,7 @@ test.describe('Appointments', () => {
     });
 
    
-    test.only('Verify user can add new Appointment', async ({ page }) => {
+    test('Verify user can add new Appointment', async ({ page }) => {
         const appointmentsPage = new AppointmentsPage(page);
         const aiBotPage = new AIBot(page);
 
@@ -327,7 +327,7 @@ test.describe('Appointments', () => {
         }
     });
 
-    test.only('Verify user can Complete Appointments', async ({ page }) => {
+    test('Verify user can Complete Appointments', async ({ page }) => {
         const appointmentsPage = new AppointmentsPage(page);
         const aiBotPage = new AIBot(page);
         
@@ -511,7 +511,7 @@ test.describe('Appointments', () => {
     });
 
 
-    test.only('Verify user can Cancel Appointments', async ({ page }) => {
+    test('Verify user can Cancel Appointments', async ({ page }) => {
         const appointmentsPage = new AppointmentsPage(page);
         const aiBotPage = new AIBot(page);
         

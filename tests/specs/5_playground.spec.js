@@ -231,7 +231,7 @@ test.describe('AI Bot Playground', () => {
     }
   });
 
-  test.only('Should handle multiple messages in conversation', async ({ page }) => {
+  test('Should handle multiple messages in conversation', async ({ page }) => {
     const aiBotPage = new AIBot(page);
 
     try {

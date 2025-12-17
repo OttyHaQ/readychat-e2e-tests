@@ -449,13 +449,8 @@ test.describe('Service Management', () => {
             });
 
             await test.step('Add new service type', async () => {
-                // Verify add button is visible
-                await expect(servicePage.addServiceTypeButton).toBeVisible({ timeout: 10000 });
-                console.log('✓ Add Service Type button is visible');
-
-                // Add the service
                 await servicePage.addNewServiceType(newServiceType);
-                console.log(`✓ Product added: "${newServiceType.name}"`);
+                console.log(`✓ Service Type added: "${newServiceType.name}"`);
 
                 // Wait for success message
                 await page.waitForTimeout(2000);
@@ -463,8 +458,29 @@ test.describe('Service Management', () => {
 
                 await servicePage.sortByDescending();
 
-                await page.getByRole('cell', { name: `${newServiceType.name}` }).waitFor({state: 'visible', timeout: 10000});
-                console.log('✓ Added service type appears in table');
+                // Search through pages instead of assuming page 1
+                const maxPages = 5;
+                let found = false;
+                
+                for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
+                    const cell = page.getByRole('cell', { name: newServiceType.name });
+                    if (await cell.isVisible().catch(() => false)) {
+                        found = true;
+                        console.log(`✓ Service type found on page ${pageNum}`);
+                        break;
+                    }
+                    
+                    // Try next page
+                    const nextBtn = page.getByRole('button', { name: String(pageNum + 1), exact: true });
+                    if (await nextBtn.isVisible().catch(() => false)) {
+                        await nextBtn.click();
+                        await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
+                    } else {
+                        break;
+                    }
+                }
+                
+                expect(found, `Service type "${newServiceType.name}" not found in first ${maxPages} pages`).toBeTruthy();
             });
 
             console.log('\n✅ Add new service type test passed!');

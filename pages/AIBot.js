@@ -141,7 +141,7 @@ export class AIBot {
     this.emojiSmile = page.locator('span:has-text("😀")').first();
     this.sendMessageBtn = page.locator('.bg-brand-secondary-gradient.rounded-full')
       .or(page.getByRole('button', { name: /send/i }));
-    this.sentMessage = page.locator('main').getByText(/want to make an order/i);
+    this.sentMessage = page.locator('main').getByText(/i want to make an order/i);
     this.addMoreKnowledgeLink = page.getByRole('link', { name: /add more knowledge/i })
       .or(page.locator('p.text-blue-600 a'));
 

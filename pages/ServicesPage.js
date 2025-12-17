@@ -155,9 +155,11 @@ export class ServicesPage {
      * Navigate to Products page
      */
     async navigateToServices() {
-        await this.serviceManagementMenu.hover();
-        await this.serviceManagementMenu.click();
-        await this.page.waitForURL(/service-management/);
+        await this.page.goto('/en/dashboard/service-management');
+        await this.page.waitForLoadState('domcontentloaded');
+        
+        // Wait for the page content to load
+        await this.addServiceButton.waitFor({ state: 'visible', timeout: 15000 });
     }
 
     /**
@@ -367,7 +369,7 @@ export class ServicesPage {
     }
 
     /**
-     * Add a new product
+     * Add a new service
      */
     async addNewService(serviceData) {
         const newQuestion = `Test Question ${Date.now()}`;

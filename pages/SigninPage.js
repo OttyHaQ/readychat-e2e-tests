@@ -76,6 +76,10 @@ export class SignInPage {
     // Fill credentials
     await this.usernameField.fill(username);
     await this.passwordField.fill(password);
+
+    await this.page.waitForTimeout(500);
+
+    await expect(this.signInBtn).toBeEnabled({ timeout: 10000 });
     
     // Click sign in button
     await this.signInBtn.click();

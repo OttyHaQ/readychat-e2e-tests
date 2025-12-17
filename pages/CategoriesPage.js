@@ -75,11 +75,9 @@ export class CategoriesPage {
      * Navigate to Products page
      */
     async navigateToCategories() {
-        await this.productManagementMenu.hover();
         await this.productManagementMenu.click();
-        await this.categoriesLink.hover();
+        await this.categoriesLink.waitFor({ state: 'visible', timeout: 10000 });
         await this.categoriesLink.click();
-        await this.page.waitForURL(/categories/);
     }
 
     /**

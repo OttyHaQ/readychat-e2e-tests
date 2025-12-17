@@ -12,7 +12,7 @@ if (!process.env.BASE_URL) {
 
 export default defineConfig({
     testDir: './tests/specs',
-    workers: process.env.CI ? undefined : undefined,
+    workers: process.env.CI ? 1 : 1,
     timeout: process.env.CI ? 1120000 : 1120000,
     expect: {
         timeout: process.env.CI ? 30000 : 20000,

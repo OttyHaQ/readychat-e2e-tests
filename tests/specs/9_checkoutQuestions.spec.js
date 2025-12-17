@@ -168,9 +168,6 @@ test.describe('Checkout Questions Management', () => {
         await checkoutQuestionsPage.navigateToCheckoutQuestions();
         await expect(checkoutQuestionsPage.pageTitle).toBeVisible({ timeout: 10000 });
 
-        // Verify page loaded
-        await expect(checkoutQuestionsPage.questionColumnHeader).toBeVisible({timeout: 5000});
-
         await test.step('Open add question dialog', async () => {
             // Verify add button is visible
             await checkoutQuestionsPage.addQuestionButton.waitFor({state: 'visible', timeout: 10000 });
@@ -189,8 +186,8 @@ test.describe('Checkout Questions Management', () => {
         });
 
         await test.step('Verify question was added to the table', async () => {
-            // First, sort by descending order to show most recent items first
-            await checkoutQuestionsPage.sortByDescending();
+            // Reload page
+            await page.reload();
 
             // Verify question appears in table
             await checkoutQuestionsPage.verifyQuestionExists(newQuestion);

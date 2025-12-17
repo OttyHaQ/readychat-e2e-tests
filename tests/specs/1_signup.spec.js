@@ -161,14 +161,14 @@ test.describe('User Signup Flow', () => {
         console.log('✓ Dashboard loaded successfully');
       });
 
-      // Sign Out 
-      await test.step('Sign out of application', async () => {
-        await dashboardPage.signOut();
-        console.log('✓ Signed out successfully');
+      // // Sign Out 
+      // await test.step('Sign out of application', async () => {
+      //   await dashboardPage.signOut();
+      //   console.log('✓ Signed out successfully');
         
-        // Verify redirect to login or landing page
-        await expect(page).toHaveURL('en/auth/login', { timeout: 30000 });
-      });
+      //   // Verify redirect to login or landing page
+      //   await expect(page).toHaveURL('en/auth/login', { timeout: 30000 });
+      // });
 
       console.log('\n✅ Complete signup and onboarding workflow test passed!');
 

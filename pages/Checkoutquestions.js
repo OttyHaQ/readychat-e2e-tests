@@ -14,9 +14,9 @@ export class CheckoutQuestionsPage {
         
         // Table Column Headers
         this.columnHeaders = page.locator('thead th, [role="columnheader"]');
-        this.questionColumnHeader = page.locator('thead th, [role="columnheader"]').filter({ hasText: /question/i }).first();
-        this.reorderColumnHeader = page.locator('thead th, [role="columnheader"]').filter({ hasText: /reorder/i }).first();
-        this.actionColumnHeader = page.locator('thead th, [role="columnheader"]').filter({ hasText: /action/i }).first();
+        this.questionColumnHeader = page.getByRole('cell', { name: /^question$/i });
+        this.reorderColumnHeader = page.getByRole('cell', { name: /^reorder$/i });
+        this.actionColumnHeader = page.getByRole('cell', { name: /^action$/i });
         
         
         // Action Buttons
@@ -88,9 +88,12 @@ export class CheckoutQuestionsPage {
      * Navigate to Checkout Questions page
      */
     async navigateToCheckoutQuestions() {
-        await this.navigateToOrderManagement();
-        await this.checkoutQuestionsLink.waitFor({ state: 'visible', timeout: 10000 });
-        await this.checkoutQuestionsLink.click();
+        // Direct navigation - more reliable than menu clicks
+        await this.page.goto('/en/dashboard/orders/checkout-questions');
+        await this.page.waitForLoadState('domcontentloaded');
+        
+        // Wait for page to be ready
+        await this.pageTitle.waitFor({ state: 'visible', timeout: 10000 });
     }
 
     /**
@@ -172,7 +175,7 @@ export class CheckoutQuestionsPage {
         await this.page.waitForTimeout(5000);
 
         // Click "Edit Question" from dropdown
-        await this.editQuestionButton.click({ timeout: 2000,force: true });
+        await this.editQuestionButton.click({ timeout: 10000,force: true });
 
         // Wait for modal and verify it's the edit modal
         await this.modal.waitFor({ state: 'visible', timeout: 10000 });
@@ -194,13 +197,15 @@ export class CheckoutQuestionsPage {
         // Click the actions button
         const row = this.page.locator('tbody tr').first();
         const actionsButton = row.locator('td').last().getByRole('button');
-        await actionsButton.hover();
         await actionsButton.click();
-        await this.page.waitForTimeout(5000);
+       
+        await this.deleteQuestionButton.waitFor({ state: 'visible', timeout: 5000 });
 
-        // Click "Edit Question" from dropdown
-        await this.deleteQuestionButton.click({ timeout: 2000,force: true });
+        // Click "Delete Question" from dropdown
+        await this.deleteQuestionButton.click(({ timeout: 10000 }));
 
+         // Wait for confirmation dialog and confirm
+        await this.confirmDeleteButton.waitFor({ state: 'visible', timeout: 10000 });
         await this.confirmDeleteButton.click();
         
     }
@@ -301,26 +306,28 @@ export class CheckoutQuestionsPage {
         while (currentPage <= maxPages) {
             console.log(`📄 Checking page ${currentPage}...`);
             
+            // Check current page
             const rows = await this.page.locator('tbody tr').all();
-            
             for (const row of rows) {
                 const rowText = await row.textContent();
                 if (rowText.toLowerCase().includes(questionText.toLowerCase())) {
-                    await row.waitFor({ state: 'visible', timeout: 5000 });
                     console.log(`✓ Question found on page ${currentPage}`);
                     return true;
                 }
             }
             
-            // Navigate to next page
-            const nextPageBtn = await this.getNextPageButton();
-            if (!nextPageBtn || !(await this.canNavigateNext(nextPageBtn))) {
+            // Try to navigate to next page - use page number button
+            const nextPageNumber = currentPage + 1;
+            const nextPageButton = this.page.getByRole('button', { name: String(nextPageNumber), exact: true });
+            
+            if (await nextPageButton.isVisible().catch(() => false)) {
+                await nextPageButton.click();
+                await this.page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
+                currentPage++;
+            } else {
+                // No more pages
                 break;
             }
-            
-            await nextPageBtn.click();
-            await this.page.waitForTimeout(1500);
-            currentPage++;
         }
         
         throw new Error(`Question "${questionText}" not found after checking ${currentPage} page(s)`);

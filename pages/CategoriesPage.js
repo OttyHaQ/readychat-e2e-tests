@@ -232,7 +232,7 @@ export class CategoriesPage {
      * Verify product exists in table
      */
     async verifyCategoryExists(categoryName) {
-        const category = this.page.getByText(`${categoryName}`);
+        const category = this.page.getByRole('row', { name: `${categoryName}` }).locator('span')
         await category.waitFor({ state: 'visible', timeout: 10000 });
     }
 

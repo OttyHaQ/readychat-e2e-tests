@@ -320,7 +320,7 @@ test.describe('Categories Management', () => {
                         name: `Temp Category ${Date.now()}`,
                         description: 'Temp Category created for Automated editing',
                     };
-                    await categoriesPage.addNewProduct(tempCategory);
+                    await categoriesPage.addNewCategory(tempCategory);
                     await page.waitForTimeout(2000);
                     console.log('✓ Created a test category for editing');
                 }
@@ -338,8 +338,8 @@ test.describe('Categories Management', () => {
                 await expect(aiBotPage.alert.first()).toContainText(/successfully/i);
                 
                 // Reload and verify
-                await page.reload();
-                await page.waitForTimeout(2000);
+                await categoryPage.navigateToCategories();
+                await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});;
 
                 await categoriesPage.sortByDescending();
                 

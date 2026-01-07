@@ -5,8 +5,7 @@ export class CategoriesPage {
         // Navigation
         this.productManagementMenu = page.getByRole('link', { name: /product management/i })
             .or(page.getByText(/product management/i).first());
-        this.categoriesLink = page.getByRole('link', { name: /categories/i })
-            .or(page.locator('a:has-text("Categories")'));
+        this.categoriesLink = page.getByRole('menuitem', { name: 'Categories' });
         
         // Page Header & Title
         this.pageTitle = page.locator('h1, h2').filter({ hasText: /categories/i }).first();
@@ -229,7 +228,7 @@ export class CategoriesPage {
     }
 
     /**
-     * Verify product exists in table
+     * Verify category exists in table
      */
     async verifyCategoryExists(categoryName) {
         const category = this.page.getByRole('row', { name: `${categoryName}` }).locator('span')

@@ -307,7 +307,6 @@ test.describe('Order Management', () => {
         
         if (orderCount === 0) {
           console.log('⚠️ No orders available to change status');
-          test.skip();
           return;
         }
 

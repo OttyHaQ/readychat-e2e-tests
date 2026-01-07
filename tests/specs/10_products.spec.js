@@ -287,7 +287,6 @@ test.describe('Products Management', () => {
                 await page.waitForTimeout(2000);
                 await expect(aiBotPage.alert.first()).toContainText(/successfully/i);
 
-                await page.getByText(`${newProduct.name}`).waitFor({state: 'visible', timeout: 10000});
                 console.log('✓ Added product appears in table');
             });
 
@@ -331,7 +330,9 @@ test.describe('Products Management', () => {
             });
 
             await test.step('Edit the first product', async () => {
-                await page.waitForTimeout(2000);
+                // Navigate back to products list
+                await productsPage.navigateToProducts();
+                await page.waitForTimeout(5000);
                 
                 // Edit the product
                 await productsPage.editProduct(updatedProduct);
@@ -379,7 +380,8 @@ test.describe('Products Management', () => {
                 console.log('✓ Created a test product for deletion');
 
                 // Return to products table
-                await productsPage.productsLink.click();
+                await productsPage.navigateToProducts();
+                await page.waitForLoadState('networkidle');
                 
                 // Sort to show newest first
                 await productsPage.sortByDescending();

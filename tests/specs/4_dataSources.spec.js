@@ -82,6 +82,7 @@ test.describe('Data Sources Management', () => {
       });
 
       await test.step('Verify unanswered tab elements', async () => {
+        // await expect(aiBotPage.answeredQuestionsTab).toBeVisible();
         await expect(aiBotPage.answeredQuestionsTab).toBeVisible();
         console.log('✓ Unanswered Questions tab visible');
       });
@@ -121,6 +122,7 @@ test.describe('Data Sources Management', () => {
       });
 
       await test.step('Switch to Answered Questions tab', async () => {
+        // await aiBotPage.switchToTab('answered');
         await aiBotPage.switchToTab('answered');
         console.log('✓ Switched to Aanswered Questions tab');
       });
@@ -215,6 +217,7 @@ test.describe('Data Sources Management', () => {
       await test.step('Navigate to All Questions', async () => {
         await aiBotPage.navigateToDataSources();
         await safeClick(page);
+        // await aiBotPage.answeredQuestionsTab.click()
         await aiBotPage.answeredQuestionsTab.click()
         console.log('✓ Switched to answered tab');
   

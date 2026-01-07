@@ -216,19 +216,48 @@ export class MessagesPage {
     return isChecked;
   }
 
+  async waitForConversationsToLoad() {
+    // Wait for table to be visible
+    await this.page.locator('table').first().waitFor({ 
+      state: 'visible', 
+      timeout: 10000 
+    });
+    
+    // Wait for at least one conversation row
+    await this.conversationItems.first().waitFor({ 
+      state: 'visible', 
+      timeout: 10000 
+    });
+    
+    console.log('✓ Conversations loaded');
+  }
+
   /**
    * Send a message in the current conversation
    * @param {string} message - Message text to send
    */
   async sendMessage(message) {
+    // Wait for input to be both visible AND enabled
     await this.messageInput.waitFor({ state: 'visible', timeout: 5000 });
+    
+    // Check if enabled before attempting to interact
+    const isEnabled = await this.messageInput.isEnabled({ timeout: 10000 }).catch(() => false);
+    
+    if (!isEnabled) {
+      throw new Error('Message input is disabled - conversation may not be ready or is blocked');
+    }
+    
     await this.messageInput.clear();
     await this.messageInput.fill(message);
-    
     await this.page.keyboard.press('Enter');
     
-    // Wait for message to be sent
-    await this.page.waitForLoadState('networkidle', { timeout: 10000 });
+    // Wait for the sent message to appear in the thread
+    await this.page
+      .getByText(message, { exact: false })
+      .last() // Get the most recent occurrence
+      .waitFor({ state: 'visible', timeout: 10000 });
+    
+    console.log('✓ Message sent and visible in thread');
   }
 
   /**

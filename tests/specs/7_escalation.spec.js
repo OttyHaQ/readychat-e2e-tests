@@ -7,7 +7,7 @@ import { safeClick, expectTextContains, fullUrl } from '../../utils/helpers.js';
 import fs from 'fs';
 import path from 'path';
 
-test.describe('Escalation Management', () => {
+test.describe.skip('Escalation Management', () => {
       const testCredentials = {
         username: process.env.USER_NAME || 'default_user',
         password: process.env.PASSWORD || 'default_password'

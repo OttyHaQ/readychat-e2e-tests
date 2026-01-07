@@ -5,8 +5,7 @@ export class ProductsPage {
         // Navigation
         this.productManagementMenu = page.getByRole('link', { name: /product management/i })
             .or(page.getByText(/product management/i).first());
-        this.productsLink = page.getByRole('link', { name: /products/i })
-            .or(page.locator('a:has-text("Products")'));
+        this.productsLink = page.getByRole('menuitem', { name: 'Products' });
         
         // Page Header & Title
         this.pageTitle = page.locator('h1, h2').filter({ hasText: /products/i }).first();

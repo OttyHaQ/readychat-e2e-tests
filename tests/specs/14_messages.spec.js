@@ -327,8 +327,9 @@ test.describe('Messages Page', () => {
     console.log('\n Testing message sending...');
 
     await test.step('Select a conversation', async () => {
+      await messagesPage.waitForConversationsToLoad();
+      
       const firstConversation = messagesPage.conversationItems.first();
-      await firstConversation.waitFor({ state: 'visible', timeout: 5000 });
       await firstConversation.click();
       await page.waitForTimeout(1000);
       console.log('  ✓ Conversation selected');

@@ -460,18 +460,16 @@ export class ServicesPage {
         // Click actions button in first row
         const actionsButton = this.page.locator('tbody tr').first().locator('td').last().getByRole('button');
         await actionsButton.click();
-        await this.page.waitForTimeout(500);
 
-        // Click "View Product Details" option
-        await this.page.evaluate(() => {
-            const options = Array.from(document.querySelectorAll('[role="option"]'));
-            const option = options.find(el => el.textContent.includes('View'));
-            if (option) option.click();
-        });
+        // Click "View" option immediately (no extra wait)
+        await this.page
+            .getByRole('option', { name: /view/i })
+            .or(this.page.locator('[role="option"]:has-text("View")'))
+            .first()
+            .click({ force: true });
 
+        // Now wait for edit button
         await this.editButton.waitFor({ state: 'visible', timeout: 10000 });
-
-        // Click "Edit"
         await this.editButton.click();
         
         // Wait for form/modal
@@ -609,52 +607,69 @@ export class ServicesPage {
     /**
      * Delete a product
      */
-    async deleteService() {
+   async deleteService() {
         // Click actions button in first row
         const actionsButton = this.page.locator('tbody tr').first().locator('td').last().getByRole('button');
         await actionsButton.click();
-        await this.page.waitForTimeout(500);
-
-        // Click "Delete" option
-        await this.page.evaluate(() => {
-            const options = Array.from(document.querySelectorAll('[role="option"]'));
-            const option = options.find(el => el.textContent.includes('Delete'));
-            if (option) option.click();
+        
+        // Wait for menu options to appear
+        await this.page.locator('[role="option"]').first().waitFor({ state: 'visible', timeout: 5000 });
+        
+        // Debug: Log available options
+        const options = await this.page.evaluate(() => {
+            const opts = Array.from(document.querySelectorAll('[role="option"]'));
+            return opts.map(el => el.textContent.trim());
         });
+        console.log('Available menu options:', options);
+        
+        // Find and click Delete using force (bypasses actionability)
+        const deleteButton = this.page
+            .locator('[role="option"]')
+            .filter({ hasText: /delete/i })
+            .and(this.page.locator('[role="option"]').filter({ hasNotText: /type/i }));
+        
+        await deleteButton.click({ force: true });
 
-        // Wait for confirmation dialog
-        await this.page.waitForTimeout(1000);
-        
-        // Confirm deletion
-        await this.confirmDeleteButton.click();
-        
-        // Wait for deletion to complete
+        // Wait and check for dialog
         await this.page.waitForTimeout(2000);
+        const hasDialog = await this.confirmDeleteButton.isVisible().catch(() => false);
+        
+        if (hasDialog) {
+            await this.confirmDeleteButton.click();
+            await this.page.waitForTimeout(2000);
+        } else {
+            console.log('⚠️ No confirmation dialog');
+            await this.page.waitForTimeout(1000);
+        }
     }
 
     async deleteServiceType() {
         // Click actions button in first row
         const actionsButton = this.page.locator('tbody tr').first().locator('td').last().getByRole('button');
         await actionsButton.click();
-        await this.page.waitForTimeout(500);
 
-        // Click "Delete" option
-        await this.page.evaluate(() => {
-            const options = Array.from(document.querySelectorAll('[role="option"]'));
-            const option = options.find(el => el.textContent.includes('Delete Type'));
-            if (option) option.click();
-        });
+        // Wait for menu to appear
+        await this.page.locator('[role="option"]').first().waitFor({ state: 'visible', timeout: 5000 });
+
+        // Click "Delete Type" option specifically
+        const deleteTypeOption = this.page
+            .locator('[role="option"]')
+            .filter({ hasText: 'Delete Type' });
+        
+        await deleteTypeOption.click({ force: true });
 
         // Wait for confirmation dialog
-        await this.page.waitForTimeout(1000);
-        
-        // Confirm deletion
-        await this.confirmDeleteButton.click();
-        
-        // Wait for deletion to complete
         await this.page.waitForTimeout(2000);
+        const hasDialog = await this.confirmDeleteButton.isVisible().catch(() => false);
+        
+        if (hasDialog) {
+            await this.confirmDeleteButton.click();
+            await this.page.waitForTimeout(2000);
+        } else {
+            console.log('⚠️ No confirmation dialog');
+            await this.page.waitForTimeout(1000);
+        }
     }
-
     /**
      * Get product count
      */

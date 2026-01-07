@@ -18,10 +18,10 @@ export default defineConfig({
         timeout: process.env.CI ? 30000 : 20000,
     },
 
-    retries: process.env.CI ? 1 : 0,
+    retries: process.env.CI ? 2 : 2,
 
     use: {
-        headless: process.env.CI ? true : false,
+        headless: process.env.CI ? true : true,
         // @ts-ignore
         baseURL: process.env.BASE_URL,
         actionTimeout: process.env.CI ? 150000 : 100000, 

@@ -14,7 +14,7 @@ export class AIBot {
 
 
     //  ALERTS 
-    this.alert = page.locator('[role="alert"]:not(#__next-route-announcer__)');
+    this.alert = page.getByRole('alert').first();
     this.alertMessage = page.locator('[role="alert"]').first();
 
 
@@ -22,6 +22,7 @@ export class AIBot {
     this.qnaTab = page.getByRole('tab', { name: /q and a|q&a/i })
       .or(page.locator('span:has-text("Q and A")'));
     this.answeredQuestionsTab = page.getByText('Answered Questions', { exact: true });
+
     this.unansweredQuestionsTab = page.getByText('Unanswered Questions')
       .or(page.locator('div[data-tour-target="faq-table"] span:has-text("Unanswered")'));
 

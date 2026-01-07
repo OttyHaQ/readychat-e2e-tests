@@ -486,7 +486,11 @@ async changeOrderStatus() {
         });
         
         await nextStatus.waitFor({ state: 'visible', timeout: 5000 });
-        await nextStatus.click();
+        // Add delay for dropdown to stabilize
+        await this.page.waitForTimeout(500);  
+        
+        // Use force click to bypass actionability checks
+        await nextStatus.click({ force: true });
         
         console.log(`✓ Changed from "${statusText}" to "${validOptions[0]}" (page ${currentPage}, row ${i+1})`);
         return true; // Success!

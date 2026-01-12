@@ -171,7 +171,7 @@ test.describe('Business Info - Comprehensive Tests', () => {
 
     // Screenshot of full form
     await page.screenshot({ 
-      path: `/home/claude/screenshots/business-info-form-${Date.now()}.png`,
+      path: `tests/screenshots/tab-}-${Date.now()}.png`,
       fullPage: true 
     });
 
@@ -203,7 +203,7 @@ test.describe('Business Info - Comprehensive Tests', () => {
       console.log('  ✓ Contact info fields filled');
       
       await page.screenshot({ 
-        path: `/home/claude/screenshots/basic-info-filled-${Date.now()}.png`,
+        path: `tests/screenshots/tab-}-${Date.now()}.png`,
         fullPage: false 
       });
     });
@@ -216,7 +216,7 @@ test.describe('Business Info - Comprehensive Tests', () => {
         
         if (hasErrorsBefore) {
             await page.screenshot({ 
-            path: `/home/claude/screenshots/validation-before-submit-${Date.now()}.png`,
+            path: `tests/screenshots/tab-}-${Date.now()}.png`,
             fullPage: true 
             });
             throw new Error('Form has validation errors before submission');
@@ -243,7 +243,7 @@ test.describe('Business Info - Comprehensive Tests', () => {
             .allTextContents();
             
             await page.screenshot({ 
-            path: `/home/claude/screenshots/validation-error-${Date.now()}.png`,
+            path: `tests/screenshots/tab-}-${Date.now()}.png`,
             fullPage: true 
             });
             
@@ -300,7 +300,7 @@ test.describe('Business Info - Comprehensive Tests', () => {
       }
       
       await page.screenshot({ 
-        path: `/home/claude/screenshots/validation-error-${Date.now()}.png`,
+        path: `tests/screenshots/tab-}-${Date.now()}.png`,
         fullPage: true 
       });
     });

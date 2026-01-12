@@ -85,7 +85,7 @@ test.describe('Messages Page', () => {
           
           // Take screenshot for verification
           await page.screenshot({ 
-            path: `/home/claude/screenshots/tab-${tabName}-${Date.now()}.png`,
+            path: `tests/screenshots/tab-}-${Date.now()}.png`,
             fullPage: false 
           });
           
@@ -123,7 +123,7 @@ test.describe('Messages Page', () => {
 
       // Screenshot of search results
       await page.screenshot({ 
-        path: `/home/claude/screenshots/search-results-${Date.now()}.png`,
+        path: `tests/screenshots/tab-}-${Date.now()}.png`,
         fullPage: true 
       });
     });
@@ -172,7 +172,7 @@ test.describe('Messages Page', () => {
         
         // Screenshot
         await page.screenshot({ 
-          path: `/home/claude/screenshots/in-message-search-${Date.now()}.png`,
+          path: `tests/screenshots/tab-}-${Date.now()}.png`,
           fullPage: true 
         });
       } else {
@@ -224,7 +224,7 @@ test.describe('Messages Page', () => {
       console.log('  ✓ Conversation favorited successfully');
       
       await page.screenshot({ 
-        path: `/home/claude/screenshots/after-favorite-${Date.now()}.png`,
+        path: `tests/screenshots/tab-}-${Date.now()}.png`,
         fullPage: false 
       });
     });
@@ -273,7 +273,7 @@ test.describe('Messages Page', () => {
       console.log('  ✓ Conversation unfavorited successfully');
       
       await page.screenshot({ 
-        path: `/home/claude/screenshots/after-unfavorite-${Date.now()}.png`,
+        path: `tests/screenshots/tab-}-${Date.now()}.png`,
         fullPage: false 
       });
     });
@@ -348,7 +348,7 @@ test.describe('Messages Page', () => {
 
       // Screenshot
       await page.screenshot({ 
-        path: `/home/claude/screenshots/message-sent-${Date.now()}.png`,
+        path: `tests/screenshots/tab-}-${Date.now()}.png`,
         fullPage: true 
       });
     });
@@ -412,7 +412,7 @@ test.describe('Messages Page', () => {
 
           // Screenshot
           await page.screenshot({ 
-            path: `/home/claude/screenshots/user-blocked-${Date.now()}.png`,
+            path: `tests/screenshots/tab-}-${Date.now()}.png`,
             fullPage: true 
           });
         } else {
@@ -428,7 +428,7 @@ test.describe('Messages Page', () => {
         
         // Take screenshot on error
         await page.screenshot({ 
-          path: `/home/claude/screenshots/block-user-error-${Date.now()}.png`,
+          path: `tests/screenshots/tab-}-${Date.now()}.png`,
           fullPage: true 
         });
         
@@ -488,7 +488,7 @@ test.describe('Messages Page', () => {
 
           // Screenshot
           await page.screenshot({ 
-            path: `/home/claude/screenshots/conversation-deleted-${Date.now()}.png`,
+            path: `tests/screenshots/tab-}-${Date.now()}.png`,
             fullPage: true 
           });
         } else {
@@ -504,7 +504,7 @@ test.describe('Messages Page', () => {
         
         // Take screenshot on error
         await page.screenshot({ 
-          path: `/home/claude/screenshots/delete-conversation-error-${Date.now()}.png`,
+          path: `tests/screenshots/tab-}-${Date.now()}.png`,
           fullPage: true 
         });
         
@@ -535,7 +535,7 @@ test.describe('Messages Page', () => {
   // Cleanup and error handling
   test.afterEach(async ({ page }, testInfo) => {
     if (testInfo.status !== testInfo.expectedStatus) {
-      const screenshotPath = `/home/claude/screenshots/${testInfo.title.replace(/\s+/g, '-')}-failure-${Date.now()}.png`;
+      const screenshotPath = `tests/screenshots/${testInfo.title.replace(/\s+/g, '-')}-failure-${Date.now()}.png`;
       await page.screenshot({ path: screenshotPath, fullPage: true });
       console.log(`📸 Failure screenshot saved: ${screenshotPath}`);
     }

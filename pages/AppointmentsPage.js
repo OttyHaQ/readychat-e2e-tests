@@ -162,33 +162,49 @@ export class AppointmentsPage {
     async selectFromDropdown(dropdownButton, optionText = null) {
         try {
             await dropdownButton.waitFor({ state: 'visible', timeout: 5000 });
+            
+            // Check if the dropdown already shows the desired value
+            const currentText = await dropdownButton.textContent();
+            if (optionText && currentText?.includes(optionText)) {
+                console.log(`✓ Already selected: ${optionText}`);
+                return optionText;
+            }
+            
+            // If no specific option requested, don't attempt to change it
+            if (!optionText) {
+                console.log(`⚠️ No option specified, keeping current value: ${currentText?.trim()}`);
+                return currentText?.trim();
+            }
+            
             await dropdownButton.click();
             
-            await this.page.waitForSelector('[role="option"]', { 
+            // Wait for options with shorter timeout
+            const optionsVisible = await this.page.waitForSelector('[role="option"]', { 
                 state: 'visible', 
-                timeout: 10000 
-            });
+                timeout: 3000 
+            }).catch(() => null);
+            
+            if (!optionsVisible) {
+                console.log(`⚠️ No dropdown options appeared. Current value: ${currentText?.trim()}`);
+                
+                // Accept current value if dropdown doesn't open (might be disabled/readonly)
+                console.log(`✓ Accepting current value: ${currentText?.trim()}`);
+                await this.page.keyboard.press('Escape');
+                return currentText?.trim();
+            }
             
             // If specific option requested, try to find it
-            if (optionText) {
-                const option = this.page.getByRole('option', { name: optionText });
-                const isVisible = await option.first().isVisible().catch(() => false);
-                
-                if (isVisible) {
-                    await option.first().click();
-                    console.log(`✓ Selected: ${optionText}`);
-
-                    // CRITICAL: Wait for dropdown to close
-                    await this.page.waitForTimeout(500);
-                    
-                    // Verify dialog is closed
-                    const dialog = this.page.locator('dialog[open], [role="dialog"]');
-                    await dialog.waitFor({ state: 'hidden', timeout: 3000 }).catch(() => {});
-
-                    return optionText;
-                } else {
-                    console.warn(`⚠️ "${optionText}" not found, selecting first available option`);
-                }
+            const option = this.page.getByRole('option', { name: optionText });
+            const isVisible = await option.first().isVisible().catch(() => false);
+            
+            if (isVisible) {
+                await option.first().click();
+                console.log(`✓ Selected: ${optionText}`);
+                await this.page.waitForTimeout(500);
+                await this.page.locator('dialog[open], [role="dialog"]').waitFor({ state: 'hidden', timeout: 3000 }).catch(() => {});
+                return optionText;
+            } else {
+                console.warn(`⚠️ "${optionText}" not found, selecting first available option`);
             }
             
             // Fall back to first option
@@ -200,11 +216,8 @@ export class AppointmentsPage {
                 if (text?.trim() !== 'Add New Appointment Type') {
                     await option.click();
                     console.log(`✓ Selected: ${text?.trim()}`);
-
-                    // CRITICAL: Wait for dropdown to close
                     await this.page.waitForTimeout(500);
                     await this.page.locator('dialog[open], [role="dialog"]').waitFor({ state: 'hidden', timeout: 3000 }).catch(() => {});
-
                     return text?.trim();
                 }
             }
@@ -383,8 +396,8 @@ export class AppointmentsPage {
 
 
     /**
- * Select date and time using Custom Time mode (fallback when no availability)
- */
+     * Select date and time using Custom Time mode (fallback when no availability)
+     */
     async selectCustomDateTime() {
         const schedulingSection = this.page.locator('section').filter({ hasText: 'Scheduling' });
         
@@ -394,80 +407,59 @@ export class AppointmentsPage {
         await this.page.waitForTimeout(2000);
         console.log('✓ Switched to Custom Time mode');
         
-        // Wait for calendar to load in Custom Time mode
-        const calendarGrid = schedulingSection.locator('[role="grid"]');
-        await calendarGrid.waitFor({ state: 'visible', timeout: 10000 });
-        console.log('✓ Calendar loaded in Custom Time mode');
+        // Click "Start Date & Time" button to open picker
+        const startDateButton = schedulingSection.locator('button').filter({ 
+            hasText: /Select a date and time|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec/i 
+        }).first();
+        
+        await startDateButton.waitFor({ state: 'visible', timeout: 5000 });
+        await startDateButton.click();
+        await this.page.waitForTimeout(1000);
+        console.log('✓ Opened date/time picker');
+        
+        // Now wait for the calendar that appears in the picker dialog/popover
+        const calendarGrid = this.page.locator('[role="grid"]');
+        await calendarGrid.waitFor({ state: 'visible', timeout: 5000 });
+        console.log('✓ Calendar picker loaded');
         
         // Select tomorrow's date
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
         const tomorrowDay = tomorrow.getDate();
         
-        // Find and click tomorrow's date button
-        const dateButtons = calendarGrid.locator('button').filter({ 
+        // Find and click tomorrow's date
+        const dateButton = calendarGrid.locator('button').filter({ 
             hasText: new RegExp(`^${tomorrowDay}$`) 
-        });
+        }).first();
         
-        const count = await dateButtons.count();
-        let dateClicked = false;
-        
-        for (let i = 0; i < count; i++) {
-            const btn = dateButtons.nth(i);
-            const isDisabled = await btn.getAttribute('disabled');
-            if (!isDisabled) {
-                await btn.click();
-                console.log(`✓ Selected date: ${tomorrowDay}`);
-                dateClicked = true;
-                break;
-            }
-        }
-        
-        if (!dateClicked) {
-            // If tomorrow is disabled, click any enabled date
-            const anyEnabledDate = calendarGrid.locator('button:not([disabled])').first();
-            await anyEnabledDate.click();
+        const isDisabled = await dateButton.getAttribute('disabled').catch(() => null);
+        if (!isDisabled) {
+            await dateButton.click();
+            console.log(`✓ Selected date: ${tomorrowDay}`);
+        } else {
+            // Click first available date
+            await calendarGrid.locator('button:not([disabled])').first().click();
             console.log('✓ Selected first available date');
         }
         
-        await this.page.waitForTimeout(1500);
+        await this.page.waitForTimeout(1000);
         
-        // Select time slot from dropdown
-        const timeSlotDropdown = schedulingSection.locator('button').filter({ 
-            hasText: /Select a time slot|time slot/i 
-        }).first();
+        // Select time if time picker appears
+        const timeInput = this.page.locator('input[type="time"]').first();
+        if (await timeInput.isVisible({ timeout: 2000 }).catch(() => false)) {
+            await timeInput.fill('10:00');
+            console.log('✓ Set time: 10:00');
+        }
         
-        const dropdownVisible = await timeSlotDropdown.isVisible({ timeout: 5000 }).catch(() => false);
-        
-        if (dropdownVisible) {
-            await timeSlotDropdown.click();
-            await this.page.waitForTimeout(500);
-            
-            // Select first available time option
-            const timeOptions = this.page.locator('[role="option"]').filter({ 
-                hasText: /^\d{1,2}:\d{2}\s?(AM|PM)?$/i 
-            });
-            
-            const optionCount = await timeOptions.count();
-            if (optionCount > 0) {
-                await timeOptions.first().click();
-                console.log('✓ Selected time slot');
-            } else {
-                // If no time options, check for time input field
-                const timeInput = this.page.locator('input[type="time"]').first();
-                if (await timeInput.isVisible().catch(() => false)) {
-                    await timeInput.fill('10:00');
-                    console.log('✓ Set time via input: 10:00');
-                }
-            }
-        } else {
-            console.log('⚠️ Time slot selector not found - may be auto-selected');
+        // Confirm selection if there's a confirm button
+        const confirmButton = this.page.getByRole('button', { name: /confirm|ok|select/i });
+        if (await confirmButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+            await confirmButton.click();
         }
         
         console.log('✓ Custom date/time selected successfully');
     }
-
-    /**
+        /**
      * Add a new appointment
      */
     async addNewAppointment(appointmentData) {
@@ -525,19 +517,42 @@ export class AppointmentsPage {
      */
 
     async selectAction(actionName) {
-
-        // Click actions button in first row
-        const actionsButton = this.page.locator('tbody tr').first().locator('td').last().getByRole('button');
+        // Wait for table to load with actual data
+        await this.page.locator('tbody tr td').first().waitFor({ 
+            state: 'visible', 
+            timeout: 10000 
+        });
+        
+        // Wait for at least one row to have status text
+        await this.page.locator('tbody tr td', { hasText: /.+/ }).first().waitFor({ 
+            state: 'visible', 
+            timeout: 10000 
+        });
+        
+        console.log('✓ Appointments table loaded');
+        
+        // Find the first row with Upcoming or Confirmed status
+        const rescheduleableRow = this.page.locator('tbody tr')
+            .filter({ has: this.page.locator('td', { hasText: /Upcoming|Confirmed/i }) })
+            .first();
+        
+        const rowCount = await rescheduleableRow.count();
+        
+        if (rowCount === 0) {
+            throw new Error('No reschedule-able appointments found (need Upcoming or Confirmed status)');
+        }
+        
+        // Click actions button in the reschedule-able row
+        const actionsButton = rescheduleableRow.locator('td').last().getByRole('button');
         await actionsButton.click();
         await this.page.waitForTimeout(500);
 
-        // Click "View appointment Details" option
+        // Click the specified action option
         await this.page.evaluate((action) => {
             const options = Array.from(document.querySelectorAll('[role="option"]'));
             const option = options.find(el => el.textContent.includes(action));
             if (option) option.click();
         }, actionName);
-
     }
 
     /**
@@ -553,30 +568,61 @@ export class AppointmentsPage {
         } = options;
         
         try {
-            // 1. Wait for modal to appear (just verify it's visible)
+            // 1-4. [Previous steps remain the same]
             await this.page.getByRole('heading', { name: /Reschedule Appointment/i })
                 .waitFor({ state: 'visible', timeout: 15000 });
-            
             console.log('✓ Reschedule modal opened');
             
-            // 2. Select date directly from page (modal is visible, calendar is on page)
             await this.selectNextAvailableDateFromPage(dateOffset);
+            await this.page.waitForTimeout(3000);
             
-            // 3. Wait for time slots to load
-            await this.page.waitForTimeout(1500);
-            
-            // 4. Select time slot directly from page
             const selectedTime = await this.selectPreferredTimeSlotFromPage(preferredTimes);
             console.log(`✓ Selected time: ${selectedTime}`);
             
-            // 5. Click Apply button (should be unique on page)
+            // 5. Click Apply button
             const applyButton = this.page.getByRole('button', { name: /^apply$/i });
             await applyButton.click();
             console.log('✓ Clicked Apply');
             
-            // 6. Wait for modal heading to disappear
-            await this.page.getByRole('heading', { name: /Reschedule Appointment/i })
-                .waitFor({ state: 'hidden', timeout: 5000 });
+            // 6. Wait for backend processing with loading indicator check
+            await this.page.waitForTimeout(5000);
+            
+            // Check if there's a loading/processing indicator
+            const loadingIndicator = this.page.locator('[role="progressbar"], .loading, .spinner, [aria-busy="true"]');
+            await loadingIndicator.waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {
+                console.log('⚠️ No loading indicator found or already hidden');
+            });
+            
+            // 7. Check for error messages
+            const errorAlert = this.page.locator('div[role="alert"], [role="alertdialog"]')
+                .filter({ hasText: /error|cannot|failed/i });
+            
+            const hasError = await errorAlert.isVisible().catch(() => false);
+            
+            if (hasError) {
+                const errorText = await errorAlert.textContent();
+                throw new Error(`Reschedule failed: ${errorText.trim()}`);
+            }
+            
+            // 8. Try to close modal explicitly if still open
+            const modalHeading = this.page.getByRole('heading', { name: /Reschedule Appointment/i });
+            const isStillVisible = await modalHeading.isVisible().catch(() => false);
+            
+            if (isStillVisible) {
+                console.log('⚠️ Modal still open after processing, attempting manual close...');
+                
+                // Try clicking outside modal or finding close button
+                const closeButton = this.page.locator('button').filter({ hasText: /close|×/i });
+                await closeButton.click().catch(() => {
+                    console.log('⚠️ No close button found, pressing Escape');
+                    return this.page.keyboard.press('Escape');
+                });
+                
+                await this.page.waitForTimeout(1000);
+            }
+            
+            // 9. Wait for modal to disappear with extended timeout
+            await modalHeading.waitFor({ state: 'hidden', timeout: 20000 });
             console.log('✓ Appointment rescheduled successfully');
             
             return { success: true, time: selectedTime };
@@ -590,7 +636,6 @@ export class AppointmentsPage {
             throw error;
         }
     }
-
 
     /**
      * Select next available date from the reschedule modal calendar

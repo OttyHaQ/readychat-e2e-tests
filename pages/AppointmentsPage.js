@@ -533,7 +533,7 @@ export class AppointmentsPage {
         
         // Find the first row with Upcoming or Confirmed status
         const rescheduleableRow = this.page.locator('tbody tr')
-            .filter({ has: this.page.locator('td', { hasText: /Upcoming|Confirmed/i }) })
+            .filter({ has: this.page.locator('td', { hasText: /Upcoming|Confirmed|Cancelled|Completed/i }) })
             .first();
         
         const rowCount = await rescheduleableRow.count();

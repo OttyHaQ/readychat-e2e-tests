@@ -10,7 +10,7 @@ on:
       environment:
         description: 'Environment to run tests against'
         required: true
-        default: 'qa'
+        default: 'prod'
         type: choice
         options:
           - dev

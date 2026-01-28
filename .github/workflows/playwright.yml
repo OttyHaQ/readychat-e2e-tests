@@ -16,6 +16,8 @@ on:
           - dev
           - qa
           - prod
+  schedule:
+    - cron: '0 13 * * *' 
 
 # Sets permissions for GitHub Pages deployment
 permissions:

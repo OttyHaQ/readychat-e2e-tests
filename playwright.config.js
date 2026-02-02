@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 import dotenv from 'dotenv';
 
 // Define env with fallback
-const environment = process.env.env || 'qa';
+const environment = process.env.env || 'prod';
 
 dotenv.config({ path: `.env.${environment}` });
 

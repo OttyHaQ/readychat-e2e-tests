@@ -18,8 +18,8 @@ export class OnboardingPage {
     this.firstNameField = page.locator('#first_name');
     this.lastNameField = page.locator('#last_name');
     this.timeZoneDropdown = page.getByRole('button', { name: '(GMT+01:00) Africa/Lagos' })
-      .or(page.getByLabel(/time zone/i));
-    this.timeZoneFirstOption = page.locator('div[role="option"]').first();
+      .or(page.locator('button:has-text("UTC")'));
+    this.timeZoneFirstOption = page.locator('div[role="option"]');
 
     //  BUSINESS INFO STEP 
     this.businessNameField = page.locator('#business_name');
@@ -176,19 +176,25 @@ export class OnboardingPage {
     // Click Get Started button
     await this.getStartedBtn.waitFor({ state: 'visible', timeout: 10000 });
     await this.getStartedBtn.click();
-    
+
     // Fill personal details
     await this.firstNameField.waitFor({ state: 'visible', timeout: 10000 });
     await this.firstNameField.fill(firstName);
     await this.lastNameField.fill(lastName);
-    
+
     // Select timezone
+    await this.timeZoneDropdown.waitFor({ state: 'visible', timeout: 5000 });
     await this.timeZoneDropdown.click();
-    await this.timeZoneFirstOption.waitFor({ state: 'visible', timeout: 5000 });
-    await this.timeZoneFirstOption.click();
-    
+
+    // Wait for dropdown to populate, then click Lagos option directly
+    await this.page.waitForTimeout(500);
+    await this.page
+      .locator('div[role="option"]:has-text("Africa/Lagos")')
+      .click({ timeout: 10000 });
+
     // Proceed to next step
     await this.nextBtn.click();
+    
   }
 
   /**
@@ -235,12 +241,20 @@ export class OnboardingPage {
     await this.currencySearchField.fill(data.currency);
     
     // Select timezone
+    await this.timeZoneDropdown.waitFor({ state: 'visible', timeout: 5000 });
     await this.timeZoneDropdown.click();
-    await this.timeZoneFirstOption.waitFor({ state: 'visible', timeout: 5000 });
-    await this.timeZoneFirstOption.click();
-    
+
+    // Wait for dropdown to populate, then click Lagos option directly
+    await this.page.waitForTimeout(500);
+    await this.page
+      .locator('div[role="option"]:has-text("Africa/Lagos")')
+      .click({ timeout: 10000 });
+
+    // Proceed to next step
     await this.nextBtn.click();
+
   }
+
 
   /**
    * Completes the Bot Settings step

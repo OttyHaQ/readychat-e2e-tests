@@ -23,8 +23,7 @@ export class AIBot {
       .or(page.locator('span:has-text("Q and A")'));
     this.answeredQuestionsTab = page.getByText('Answered Questions', { exact: true });
 
-    this.unansweredQuestionsTab = page.getByText('Unanswered Questions')
-      .or(page.locator('div[data-tour-target="faq-table"] span:has-text("Unanswered")'));
+    this.unansweredQuestionsTab = page.getByRole('link', { name: 'Unanswered Questions' });
 
     // Table Columns
     this.questionColumn = page.getByRole('columnheader', { name: /question/i })

@@ -263,18 +263,20 @@ export class OnboardingPage {
   async completeBotSettings(customData = {}) {
     const data = { ...this.testData, ...customData };
     
-    // Click Get Started button
-    await this.getStartedBtn.waitFor({ state: 'visible', timeout: 10000 });
-    await this.getStartedBtn.click();
-    
-    // Wait for intro field and fill
-    await this.introTextField.waitFor({ state: 'visible', timeout: 10000 });
-    await this.introTextField.fill(data.intro);
-    
-    // Fill tone field
-    await this.toneTextField.waitFor({ state: 'visible', timeout: 5000 });
-    await this.toneTextField.fill(data.tone);
-    
+    // Click Get Started button (if present — some step variants skip this screen)
+    const getStartedVisible = await this.getStartedBtn.isVisible().catch(() => false);
+    if (getStartedVisible) {
+      await this.getStartedBtn.click();
+    }
+
+    // Fill intro/tone text fields if present (removed in current UI but kept for backwards compat)
+    const introVisible = await this.introTextField.isVisible().catch(() => false);
+    if (introVisible) {
+      await this.introTextField.fill(data.intro);
+      await this.toneTextField.waitFor({ state: 'visible', timeout: 5000 });
+      await this.toneTextField.fill(data.tone);
+    }
+
     // Toggle all general settings
     await this.toggleAllGeneralSettings(true);
     

@@ -5,8 +5,8 @@ export class AIBot {
     //  NAVIGATION 
     this.aiBotMenuItem = page.getByRole('link', { name: /ai bot/i })
       .or(page.getByText(/ai bot/i).first());
-    this.dataSourcesLink = page.locator('xpath=//a[normalize-space()="Data Sources"]')
-      .or(page.getByRole('link', { name: /data sources/i }));
+    this.dataSourcesLink = page.getByRole('link', { name: /knowledge base/i })
+      .or(page.locator('xpath=//a[normalize-space()="Knowledge Base"]'));
     this.playgroundLink = page.locator('xpath=//a[normalize-space()="Playground"]')
       .or(page.getByRole('link', { name: /playground/i }));
     this.configureLink = page.locator('xpath=//a[normalize-space()="Configure"]')
@@ -21,9 +21,9 @@ export class AIBot {
     //  DATA SOURCES - Q&A SECTION 
     this.qnaTab = page.getByRole('tab', { name: /q and a|q&a/i })
       .or(page.locator('span:has-text("Q and A")'));
-    this.answeredQuestionsTab = page.getByText('Answered Questions', { exact: true });
+    this.answeredQuestionsTab = page.getByRole('link', { name: 'Answered', exact: true });
 
-    this.unansweredQuestionsTab = page.getByRole('link', { name: 'Unanswered Questions' });
+    this.unansweredQuestionsTab = page.getByRole('link', { name: /unanswered/i });
 
     // Table Columns
     this.questionColumn = page.getByRole('columnheader', { name: /question/i })
@@ -46,13 +46,14 @@ export class AIBot {
     // Action Buttons
     this.exportBtn = page.getByRole('button', { name: /^export$/i })
       .or(page.locator('button:has-text("Export")').first());
-    this.reorderBtn = page.locator('button[class="h-full bg-gray-100 text-gray-700 border-2 border-brand-gray-200 p-4 text-base rounded-xl font-semibold transition-[colors,box-shadow] duration-200 flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-gray-100"]');
+    this.reorderBtn = page.getByRole('button', { name: /reorder/i })
+      .or(page.locator('button:has-text("Reorder")'));
     this.saveBtn = page.getByRole('button', { name: /^save$/i })
       .or(page.locator('button:has-text("Save")').first());
     this.cancelBtn = page.getByRole('button', { name: /cancel/i })
       .or(page.locator('button:has-text("Cancel")'));
-    this.addNewQuestionsBtn = page.getByRole('button', { name: /add new questions/i })
-      .or(page.locator('button:has-text("Add New Questions")'));
+    this.addNewQuestionsBtn = page.getByRole('button', { name: /add new question/i })
+      .or(page.locator('button:has-text("Add New Question")'));
     this.addSourceBtn = page.getByRole('button', { name: 'Add Source' });
 
     // Export Modal
@@ -66,13 +67,11 @@ export class AIBot {
     this.pdfBtn = page.getByRole('button', { name: /^pdf$/i })
       .or(page.locator('button:has-text("PDF")'));
 
-    //  ADD QUESTION MODAL 
-    this.addQuestionHeader = page.getByText(/what are commonly asked questions by customers?/i)
-      .or(page.locator('h3:has-text("What are Commonly Asked Questions By Customers?")'));
-    this.questionField = page.locator('#question')
-      .or(page.getByLabel(/question/i));
-    this.answerField = page.locator('#answer')
-      .or(page.getByLabel(/answer/i));
+    //  ADD QUESTION PANEL
+    this.addQuestionHeader = page.getByRole('heading', { name: /add question and answer/i })
+      .or(page.getByText(/add question and answer/i));
+    this.questionField = page.locator('#question').or(page.getByRole('textbox', { name: 'Question*', exact: true }));
+    this.answerField = page.locator('#answer').or(page.getByRole('textbox', { name: 'Answer*', exact: true }));
     this.productsDropdown = page.locator('div.tour-target-faq-product-dropdown button')
       .or(page.getByRole('button', { name: /select product/i }));
     this.productOption = page.locator('tr.hover\\:bg-brand-gray-300 td:nth-child(1)');
@@ -216,39 +215,50 @@ export class AIBot {
    * Navigates to AI Bot section
    */
   async navigateToAIBot() {
-    await this.aiBotMenuItem.waitFor({ state: 'visible', timeout: 10000 });
-    await this.page.waitForTimeout(5000);
-    await this.aiBotMenuItem.click();
-    
+    // In newer UI, sidebar items are directly visible without an "AI Bot" parent
+    const menuVisible = await this.aiBotMenuItem.isVisible().catch(() => false);
+    if (menuVisible) {
+      await this.aiBotMenuItem.click();
+    }
   }
 
   /**
    * Navigates to Data Sources page
    */
   async navigateToDataSources() {
-    await this.navigateToAIBot();
-    // await this.dataSourcesLink.waitFor({ state: 'visible', timeout: 10000 });
-    await this.dataSourcesLink.click();
+    const isVisible = await this.dataSourcesLink.isVisible({ timeout: 2000 }).catch(() => false);
+    if (isVisible) {
+      await this.dataSourcesLink.click();
+    } else {
+      await this.page.goto('/en/dashboard/ai-bot/knowledge-base');
+    }
+    await this.page.waitForLoadState('domcontentloaded');
   }
 
   /**
    * Navigates to Playground
    */
   async navigateToPlayground() {
-    await this.navigateToAIBot();
-    // await this.playgroundLink.waitFor({ state: 'visible', timeout: 10000 });
-    // await this.page.waitForTimeout(500);
-    await this.playgroundLink.click();
+    const isVisible = await this.playgroundLink.isVisible({ timeout: 2000 }).catch(() => false);
+    if (isVisible) {
+      await this.playgroundLink.click();
+    } else {
+      await this.page.goto('/en/dashboard/ai-bot/playground');
+    }
+    await this.page.waitForLoadState('domcontentloaded');
   }
 
   /**
    * Navigates to Configure page
    */
   async navigateToConfigure() {
-    await this.navigateToAIBot();
-    await this.configureLink.waitFor({ state: 'visible', timeout: 10000 });
-    // await this.page.waitForTimeout(500);
-    await this.configureLink.click();
+    const isVisible = await this.configureLink.isVisible({ timeout: 2000 }).catch(() => false);
+    if (isVisible) {
+      await this.configureLink.click();
+    } else {
+      await this.page.goto('/en/dashboard/ai-bot/configure');
+    }
+    await this.page.waitForLoadState('domcontentloaded');
   }
 
   //  DATA SOURCES METHODS 
@@ -260,21 +270,13 @@ export class AIBot {
   
 
     async switchToTab(tabName) {
-      const tabs = {
-          unaswered: this.unansweredQuestionsTab,
-          answered: this.answeredQuestionsTab
-      };
-      
-      const tab = tabs[tabName.toLowerCase()];
-      if (!tab) {
-          throw new Error(`Unknown tab: ${tabName}. Use 'answered' or 'unanswered'`);
+      if (tabName.toLowerCase() === 'answered') {
+          await this.page.goto('/en/dashboard/ai-bot/knowledge-base/answered');
+      } else {
+          await this.page.goto('/en/dashboard/ai-bot/knowledge-base');
       }
-      
-      await tab.waitFor({ state: 'visible', timeout: 10000 });
-      await tab.click();
-      await this.page.waitForTimeout(1000); // Wait for content to load
-      
-      console.log(`✓ Switched to ${tabName} tab`);
+      await this.page.waitForLoadState('domcontentloaded');
+      await this.page.waitForTimeout(500);
   }
 
   /**

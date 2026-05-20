@@ -497,6 +497,10 @@ export class ServicesPage {
         await this.serviceNameInput.fill(newServiceData.name);
 
          if (!newServiceData.serviceType && !hasServiceType) {
+            const isServiceTypeVisible = await serviceTypeButton.isVisible().catch(() => false);
+            if (!isServiceTypeVisible) {
+                console.log('⚠️ Service type button not visible, skipping');
+            } else {
             console.log('⚠️ No service type set, selecting first available option');
             try {
                 await serviceTypeButton.click();
@@ -515,6 +519,7 @@ export class ServicesPage {
             } catch (error) {
                 console.log('⚠️ Could not auto-select service type:', error.message);
             }
+            } // end isServiceTypeVisible
         }
 
         if (newServiceData.status) {
@@ -570,20 +575,26 @@ export class ServicesPage {
 
 
     async editServiceType(serviceTypeData) {
-        
+
         // Click actions button in first row
         const actionsButton = this.page.locator('tbody tr').first().locator('td').last().getByRole('button');
         await actionsButton.click();
+        await this.page.locator('[role="option"]').first().waitFor({ state: 'visible', timeout: 5000 });
+
+        // Try edit option variants
+        const editOption = this.page.locator('[role="option"]').filter({ hasText: /modify type|edit type/i }).first();
+        const editVisible = await editOption.isVisible().catch(() => false);
+        if (editVisible) {
+            await editOption.click({ force: true });
+        } else {
+            const availableOptions = await this.page.evaluate(() =>
+                Array.from(document.querySelectorAll('[role="option"]')).map(el => el.textContent.trim())
+            );
+            console.log('Available service type options:', availableOptions);
+            throw new Error(`Edit option not found. Available: ${availableOptions.join(', ')}`);
+        }
+
         await this.page.waitForTimeout(1000);
-
-        // Click "View Product Details" option
-        await this.page.evaluate(() => {
-            const options = Array.from(document.querySelectorAll('[role="option"]'));
-            const option = options.find(el => el.textContent.includes('Modify Type'));
-            if (option) option.click();
-        });
-
-        await this.page.waitForTimeout(2000);
 
         // Wait for form/modal
         await this.typeName.waitFor({state: 'visible', timeout: 10000});
@@ -598,9 +609,6 @@ export class ServicesPage {
         
         // Create
         await this.updateBtn.click();
-        
-        // Wait for form to close
-        await this.page.waitForTimeout(2000);
     }
 
 

@@ -1,13 +1,28 @@
 node_modules
 mcp-server.js
+
+# Environment files with sensitive credentials
 .env.dev
 .env.qa
 .env.prod
+.env
+.env.*
+
+# Test credentials
+tests/test-credentials.json
+
 # Playwright
 /test-results/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+/.features-gen/
+
+# Test artifacts
+tests/screenshots/
+*.png
+*.jpg
+*.jpeg
 
 

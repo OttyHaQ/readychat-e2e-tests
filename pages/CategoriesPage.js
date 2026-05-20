@@ -3,9 +3,10 @@ export class CategoriesPage {
         this.page = page;
         
         // Navigation
-        this.productManagementMenu = page.getByRole('link', { name: /product management/i })
-            .or(page.getByText(/product management/i).first());
-        this.categoriesLink = page.getByRole('menuitem', { name: 'Categories' });
+        this.productManagementMenu = page.locator('button:has-text("Product Management"), [role="menuitem"]:has-text("Product Management")').first()
+            .or(page.getByRole('button', { name: /product management/i }).first());
+        this.categoriesLink = page.getByRole('link', { name: 'Categories', exact: true }).first()
+            .or(page.locator('[role="menuitem"]:has-text("Categories"), a:has-text("Categories")').first());
         
         // Page Header & Title
         this.pageTitle = page.locator('h1, h2').filter({ hasText: /categories/i }).first();
@@ -74,9 +75,13 @@ export class CategoriesPage {
      * Navigate to Products page
      */
     async navigateToCategories() {
-        await this.productManagementMenu.click();
-        await this.categoriesLink.waitFor({ state: 'visible', timeout: 10000 });
-        await this.categoriesLink.click();
+        const directVisible = await this.categoriesLink.isVisible({ timeout: 3000 }).catch(() => false);
+        if (directVisible) {
+            await this.categoriesLink.click();
+        } else {
+            await this.page.goto('/en/dashboard/products/categories');
+        }
+        await this.page.waitForLoadState('domcontentloaded');
     }
 
     /**

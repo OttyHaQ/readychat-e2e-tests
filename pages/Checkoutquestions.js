@@ -89,7 +89,7 @@ export class CheckoutQuestionsPage {
      */
     async navigateToCheckoutQuestions() {
         // Direct navigation - more reliable than menu clicks
-        await this.page.goto('/en/dashboard/orders/checkout-questions');
+        await this.page.goto('/en/dashboard/ai-bot/checkout-questions');
         await this.page.waitForLoadState('domcontentloaded');
         
         // Wait for page to be ready
@@ -167,27 +167,19 @@ export class CheckoutQuestionsPage {
  * Edit an existing question
  */
     async editQuestion(newQuestionText) {
-        // Click the actions button
         const row = this.page.locator('tbody tr').first();
         const actionsButton = row.locator('td').last().getByRole('button');
-        await actionsButton.hover();
         await actionsButton.click();
-        await this.page.waitForTimeout(5000);
 
-        // Click "Edit Question" from dropdown
-        await this.editQuestionButton.click({ timeout: 10000,force: true });
+        await this.editQuestionButton.waitFor({ state: 'visible', timeout: 10000 });
+        await this.editQuestionButton.click({ force: true });
 
-        // Wait for modal and verify it's the edit modal
-        await this.modal.waitFor({ state: 'visible', timeout: 10000 });
-        
-        // Fill in the new question
+        // Wait for the question input to be editable (avoids brittle label[for="question"] check)
+        await this.questionInput.waitFor({ state: 'visible', timeout: 10000 });
+        await this.questionInput.clear();
         await this.questionInput.fill(newQuestionText);
-        
-        // Click Save/Update
+
         await this.updateButton.click();
-        
-        // Wait for success or modal close
-        await this.modal.waitFor({ state: 'hidden', timeout: 5000 });
     }
 
     /**

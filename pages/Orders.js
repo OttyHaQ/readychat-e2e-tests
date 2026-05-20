@@ -135,8 +135,7 @@ export class Orders {
     // ============ ALERTS ============
     this.alert = page.locator('[role="alert"]')
       .or(page.locator('div[role="alert"]'));
-    this.orderStatusHeader = page.locator('.h4')
-      .or(page.getByRole('heading', { level: 4 }));
+    this.orderStatusHeader = page.getByRole('heading', { level: 5 }).filter({ hasText: /orders.*:/i }).first();
   }
 
   // ============ NAVIGATION METHODS ============
@@ -145,17 +144,25 @@ export class Orders {
    * Navigates to Order Management section
    */
   async navigateToOrderManagement() {
-    await this.orderManagementMenuItem.waitFor({ state: 'visible', timeout: 10000 });
-    await this.orderManagementMenuItem.click();
+    const menuVisible = await this.orderManagementMenuItem.isVisible().catch(() => false);
+    if (menuVisible) {
+      await this.orderManagementMenuItem.click();
+    }
   }
 
   /**
    * Navigates to Orders page
    */
   async navigateToOrders() {
-    await this.navigateToOrderManagement();
-    await this.ordersLink.waitFor({ state: 'visible', timeout: 10000 });
-    await this.ordersLink.click();
+    const directVisible = await this.ordersLink.isVisible({ timeout: 3000 }).catch(() => false);
+    if (directVisible) {
+      await this.ordersLink.click();
+    } else {
+      await this.navigateToOrderManagement();
+      await this.ordersLink.waitFor({ state: 'visible', timeout: 10000 });
+      await this.ordersLink.click();
+    }
+    await this.page.waitForLoadState('domcontentloaded');
   }
 
   /**
@@ -278,11 +285,12 @@ export class Orders {
             const rowExists = await row.count() > 0;
             if (!rowExists) break;
             
-            // Get the status of the current row
-            const statusCell = row.locator('td').nth(7); // Adjust index if needed
-            const statusButton = statusCell.getByRole('button');
-            const statusText = await statusButton.textContent();
-            const normalizedStatus = statusText.trim().toLowerCase();
+            // Get the status of the current row (button text if clickable, otherwise cell text)
+            const statusCell = row.locator('td').nth(7);
+            const buttonText = await statusCell.locator('button').first().textContent({ timeout: 3000 }).catch(() => null);
+            const cellText = await statusCell.textContent().catch(() => '');
+            const statusText = (buttonText || cellText || '').trim();
+            const normalizedStatus = statusText.toLowerCase();
             
             // Skip if status is "Cancelled" or "Completed"
             if (normalizedStatus === 'cancelled' || normalizedStatus === 'completed') {

@@ -1,7 +1,7 @@
 export class DashboardPage {
   constructor(page) {
     this.page = page;
-    this.title = page.getByRole('heading', { name: 'Dashboard', level: 2 });
+    this.title = page.getByText('Dashboard', { exact: true }).first();
     this.profileBtn = page.locator('.relative.w-full > [aria-expanded="false"] > .ps-4');
     this.logOutBtn = page.getByText('Log out');
     this.signOutBtn = page.getByRole('button', { name: 'Sign out' });

@@ -77,22 +77,21 @@ export class SignUpPage {
    * @param {string} password - Password for the account
    * @param {string} email - Email address for the account
    */
-  async fillSignUpForm(username, password, email) {
+  async fillSignUpForm(email, password) {
     // Handle cookie consent
     await this.handleCookieConsent();
-    
+
     // Wait for form to be ready
-    await this.usernameField.waitFor({ state: 'visible', timeout: 10000 });
-    
+    await this.emailField.waitFor({ state: 'visible', timeout: 30000 });
+
     // Fill form fields
-    await this.usernameField.fill(username);
+    await this.emailField.fill(email);
     await this.passwordField.fill(password);
     await this.confirmPasswordField.fill(password);
-    await this.emailField.fill(email);
-    
+
     // Accept privacy policy
     await this.privacyPolicyCheckbox.click();
-    
+
     // Submit form
     await this.getStartedBtn.click();
   }

@@ -61,7 +61,6 @@ jobs:
       env:
         env: ${{ github.event.inputs.environment || 'qa' }}
       run: npx playwright test
-      continue-on-error: true
 
     - name: Upload HTML report
       uses: actions/upload-artifact@v4

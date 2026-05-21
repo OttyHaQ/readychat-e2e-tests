@@ -432,9 +432,13 @@ async changeOrderStatus() {
     for (let i = 0; i < rowCount; i++) {
       const row = rows.nth(i);
       const statusCell = row.locator('td:nth-child(8) button');
-      
+
+      // Skip rows where the status button doesn't exist
+      const statusCellVisible = await statusCell.isVisible().catch(() => false);
+      if (!statusCellVisible) continue;
+
       // Get status text
-      const statusText = (await statusCell.innerText()).trim().toLowerCase();
+      const statusText = (await statusCell.innerText({ timeout: 5000 })).trim().toLowerCase();
       console.log(`   Row ${i + 1}: Status = "${statusText}"`);
 
       if (changeableStatuses.includes(statusText)) {

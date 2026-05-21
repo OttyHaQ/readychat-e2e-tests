@@ -6,6 +6,8 @@ import { safeClick } from '../../utils/helpers.js';
 
 const { Given, When, Then } = createBdd();
 
+let lastCreatedServiceName = null;
+
 Given('I am on the Services page', async ({ page }) => {
     const servicePage = new ServicesPage(page);
     await servicePage.navigateToServices();
@@ -116,7 +118,8 @@ Then('all service export downloads should complete', async () => {});
 When('I add a new service with price {string} currency {string} and description {string}', async ({ page }, price, currency, description) => {
     const servicePage = new ServicesPage(page);
     const aiBotPage = new AIBot(page);
-    const serviceData = { name: `Test Service ${Date.now()}`, status: 'Active', price, currency, description };
+    lastCreatedServiceName = `Test Service ${Date.now()}`;
+    const serviceData = { name: lastCreatedServiceName, status: 'Active', price, currency, description };
     await expect(servicePage.addServiceButton).toBeVisible({ timeout: 30000 });
     await servicePage.addNewService(serviceData);
     await page.waitForTimeout(2000);
@@ -171,14 +174,6 @@ When('I edit the first service type with an updated name and description', async
     const updatedServiceType = { name: `Updated Service Type ${Date.now()}`, description: 'Updated Service Type Description via Automation' };
     await page.waitForTimeout(2000);
     await servicePage.editServiceType(updatedServiceType);
-});
-
-When('I create a service for deletion', async ({ page }) => {
-    const servicePage = new ServicesPage(page);
-    const tempService = { name: `Temp Service for Deletion ${Date.now()}`, price: '25.00', description: 'Temp Service for deleting with Automation' };
-    await servicePage.addNewService(tempService);
-    await page.waitForTimeout(2000);
-    await servicePage.navigateToServices();
 });
 
 When('I sort services by descending and delete the first service', async ({ page }) => {

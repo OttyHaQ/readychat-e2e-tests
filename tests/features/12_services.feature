@@ -59,8 +59,7 @@ Feature: Service Management
 
   Scenario: Verify user can delete a service
     Given I am on the Services page
-    When I create a service for deletion
-    And I sort services by descending and delete the first service
+    When I sort services by descending and delete the first service
     Then the service delete action should complete
 
   Scenario: Verify user can delete a service type

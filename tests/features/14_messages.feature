@@ -42,14 +42,20 @@ Feature: Messages Page
     And I send the message "This is an automated test message from Playwright"
     Then the message should appear in the thread
 
-  @skip
-  Scenario: Block a user
-    When I find and select the conversation for "Test Customer"
-    And I block the user
-    Then the block action should complete
+  Scenario: Block a user with confirmation
+    When I select the first conversation
+    And I open the conversation more options menu
+    And I block the conversation user
+    Then the block action should complete with confirmation or notification
 
-  @skip
-  Scenario: Delete a conversation
-    When I find and select the conversation for "Flora Ready"
-    And I delete the conversation
-    Then the conversation should be removed
+  Scenario: Delete a conversation with confirmation
+    When I select the first available unblocked conversation
+    And I open the conversation more options menu
+    And I delete the selected conversation
+    Then the deleted conversation should be removed or a confirmation should appear
+
+  Scenario: Verify AI bot reply after sending a message
+    When I select the first conversation
+    And I ensure Chat AI is enabled
+    And I send the test message "What are your business hours?"
+    Then the AI bot should reply or the message should appear in the thread

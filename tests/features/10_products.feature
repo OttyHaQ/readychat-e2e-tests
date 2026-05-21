@@ -42,3 +42,15 @@ Feature: Products Management
     Given I am on the Products page
     When I attempt to reorder product columns
     Then the reorder action should complete or report unavailable
+
+  Scenario: Search and filter products by name
+    Given I am on the Products page
+    When I search for a product by name "Test"
+    Then the products table should be filtered or a no results message should appear
+
+  Scenario: Bulk delete products
+    Given I am on the Products page
+    And at least two products exist
+    When I select multiple products using bulk selection
+    And I trigger bulk delete for selected products
+    Then the bulk delete action should complete or a confirmation should appear

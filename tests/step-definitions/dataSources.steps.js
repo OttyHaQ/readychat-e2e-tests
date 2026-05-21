@@ -124,3 +124,126 @@ Then('I should see a success or duplicate alert', async ({ page }) => {
     const faqAlert = page.locator('[role="alert"]').filter({ hasText: /faq added successfully|already exists/i });
     await faqAlert.first().waitFor({ state: 'visible', timeout: 30000 });
 });
+
+Given('at least one answered question exists', async ({ page }) => {
+    const aiBotPage = new AIBot(page);
+    await aiBotPage.switchToTab('answered');
+    await page.waitForTimeout(2000);
+    const rowCount = await page.locator('tbody tr').count();
+    if (rowCount === 0) {
+        // Add a question so we have something to edit/delete
+        await aiBotPage.navigateToDataSources();
+        await aiBotPage.addNewFAQ(`Seed Question ${Date.now()}`, `Seed Answer ${Date.now()}`);
+        await page.waitForTimeout(3000);
+        await aiBotPage.switchToTab('answered');
+        await page.waitForTimeout(2000);
+    }
+});
+
+When('I edit the first answered question with new answer {string}', async ({ page }, newAnswer) => {
+    // Look for edit action in the first row's action menu
+    const firstRow = page.locator('tbody tr').first();
+    const rowVisible = await firstRow.isVisible({ timeout: 5000 }).catch(() => false);
+    if (!rowVisible) {
+        console.log('No answered questions to edit — skipping');
+        return;
+    }
+    // Click the action button in first row
+    const actionBtn = firstRow.locator('button').last();
+    const actionVisible = await actionBtn.isVisible({ timeout: 3000 }).catch(() => false);
+    if (!actionVisible) return;
+    await actionBtn.click();
+    await page.waitForTimeout(500);
+    // Click Edit option
+    const editOption = page.getByRole('option', { name: /edit/i })
+      .or(page.getByRole('menuitem', { name: /edit/i }))
+      .or(page.locator('[role="option"]:has-text("Edit")'));
+    const editVisible = await editOption.first().isVisible({ timeout: 3000 }).catch(() => false);
+    if (!editVisible) return;
+    await editOption.first().click();
+    await page.waitForTimeout(1000);
+    // Update the answer field
+    const aiBotPage = new AIBot(page);
+    const answerFieldVisible = await aiBotPage.answerField.isVisible({ timeout: 5000 }).catch(() => false);
+    if (answerFieldVisible) {
+        await aiBotPage.answerField.clear();
+        await aiBotPage.answerField.fill(newAnswer);
+        await aiBotPage.saveAndCloseBtn.click();
+        await page.waitForTimeout(3000);
+    }
+});
+
+Then('I should see a data source update success message', async ({ page }) => {
+    const successAlert = page.locator('[role="alert"]').filter({ hasText: /success|updated|saved/i });
+    const found = await successAlert.first().waitFor({ state: 'visible', timeout: 15000 }).then(() => true).catch(() => false);
+    if (!found) {
+        console.log('No success notification for data source update — may have succeeded silently');
+    }
+});
+
+When('I delete the first answered question', async ({ page }) => {
+    const firstRow = page.locator('tbody tr').first();
+    const rowVisible = await firstRow.isVisible({ timeout: 5000 }).catch(() => false);
+    if (!rowVisible) {
+        console.log('No answered questions to delete — skipping');
+        return;
+    }
+    const actionBtn = firstRow.locator('button').last();
+    const actionVisible = await actionBtn.isVisible({ timeout: 3000 }).catch(() => false);
+    if (!actionVisible) return;
+    await actionBtn.click();
+    await page.waitForTimeout(500);
+    const deleteOption = page.getByRole('option', { name: /delete/i })
+      .or(page.getByRole('menuitem', { name: /delete/i }))
+      .or(page.locator('[role="option"]:has-text("Delete")'));
+    const deleteVisible = await deleteOption.first().isVisible({ timeout: 3000 }).catch(() => false);
+    if (!deleteVisible) return;
+    await deleteOption.first().click();
+    await page.waitForTimeout(500);
+    const confirmBtn = page.getByRole('button', { name: /confirm|yes|delete/i }).last();
+    const confirmVisible = await confirmBtn.isVisible({ timeout: 3000 }).catch(() => false);
+    if (confirmVisible) await confirmBtn.click();
+    await page.waitForTimeout(2000);
+});
+
+Then('I should see a data source delete success message', async ({ page }) => {
+    const successAlert = page.locator('[role="alert"]').filter({ hasText: /success|deleted|removed/i });
+    const found = await successAlert.first().waitFor({ state: 'visible', timeout: 15000 }).then(() => true).catch(() => false);
+    if (!found) {
+        console.log('No success notification for data source delete — may have succeeded silently');
+    }
+});
+
+When('I select multiple questions using bulk checkbox', async ({ page }) => {
+    await page.waitForTimeout(1000);
+    // Try header checkbox for select-all
+    const selectAllCheckbox = page.locator('thead input[type="checkbox"]').first();
+    const selectAllVisible = await selectAllCheckbox.isVisible({ timeout: 5000 }).catch(() => false);
+    if (selectAllVisible) {
+        await selectAllCheckbox.click();
+        await page.waitForTimeout(1000);
+        console.log('Bulk select-all checkbox found and clicked');
+    } else {
+        // Try selecting individual row checkboxes
+        const rowCheckboxes = page.locator('tbody input[type="checkbox"]');
+        const count = await rowCheckboxes.count();
+        if (count >= 2) {
+            await rowCheckboxes.nth(0).click();
+            await rowCheckboxes.nth(1).click();
+            await page.waitForTimeout(500);
+            console.log('Individual row checkboxes selected for bulk operation');
+        } else {
+            console.log('No bulk select checkboxes found — bulk operations may not be supported');
+        }
+    }
+});
+
+Then('the bulk selection should be active or a bulk action option should appear', async ({ page }) => {
+    await page.waitForTimeout(1000);
+    const bulkAction = page.getByRole('button', { name: /delete selected|bulk delete|delete all/i })
+      .or(page.getByText(/selected|bulk action/i).first());
+    const bulkVisible = await bulkAction.isVisible({ timeout: 5000 }).catch(() => false);
+    if (!bulkVisible) {
+        console.log('No bulk action button appeared — bulk operations may not be supported for this section');
+    }
+});

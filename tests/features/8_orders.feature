@@ -53,3 +53,8 @@ Feature: Order Management
     Then the order details page should show order ID and customer details
     When I edit the order with notes "Updated order via automation" and quantity "5"
     Then I should see a success or stock limit message
+
+  Scenario: Create a new order
+    Given I am on the Orders page
+    When I initiate creating a new order
+    Then the new order creation form or flow should appear

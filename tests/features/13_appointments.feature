@@ -62,3 +62,18 @@ Feature: Appointments
     Given I am on the Appointments page
     When I attempt to reorder appointment columns
     Then the reorder action should complete or report unavailable
+
+  Scenario: Search appointments by keyword
+    Given I am on the Appointments page
+    When I search appointments for "Flora"
+    Then the appointments table should be filtered or a search result should appear
+
+  Scenario: Filter appointments by status
+    Given I am on the Appointments page
+    When I filter appointments by status "Confirmed"
+    Then only confirmed appointments should be visible or a filter should be applied
+
+  Scenario: Filter appointments by date range
+    Given I am on the Appointments page
+    When I filter appointments by a date range
+    Then appointments within that date range should be displayed or a filter should be applied

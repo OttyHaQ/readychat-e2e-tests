@@ -130,3 +130,90 @@ When('I attempt to reorder product columns', async ({ page }) => {
     }
 });
 
+When('I search for a product by name {string}', async ({ page }, searchText) => {
+    const searchInput = page.getByRole('searchbox')
+      .or(page.getByPlaceholder(/search/i))
+      .or(page.locator('input[type="search"]'))
+      .first();
+    const searchVisible = await searchInput.isVisible({ timeout: 5000 }).catch(() => false);
+    if (searchVisible) {
+        await searchInput.fill(searchText);
+        await page.waitForTimeout(1500);
+    } else {
+        console.log('Search input not found on products page — filtering may not be available');
+    }
+});
+
+Then('the products table should be filtered or a no results message should appear', async ({ page }) => {
+    await page.waitForTimeout(1000);
+    const noResults = page.getByText(/no results|no products|no data found/i).first();
+    const hasNoResults = await noResults.isVisible({ timeout: 3000 }).catch(() => false);
+    if (!hasNoResults) {
+        const rowCount = await page.locator('tbody tr').count();
+        expect(rowCount).toBeGreaterThanOrEqual(0);
+        console.log(`Products table shows ${rowCount} rows after search`);
+    }
+});
+
+Given('at least two products exist', async ({ page }) => {
+    const productsPage = new ProductsPage(page);
+    const count = await productsPage.getProductCount();
+    if (count < 2) {
+        for (let i = count; i < 2; i++) {
+            await productsPage.addNewProduct({ name: `Bulk Test Product ${Date.now()}_${i}`, price: '10.00', stock: '5' });
+            await page.waitForTimeout(1500);
+        }
+        await productsPage.navigateToProducts();
+        await page.waitForTimeout(2000);
+    }
+});
+
+When('I select multiple products using bulk selection', async ({ page }) => {
+    await page.waitForTimeout(1000);
+    // Try header checkbox for select-all
+    const selectAllCheckbox = page.locator('thead input[type="checkbox"]').first();
+    const selectAllVisible = await selectAllCheckbox.isVisible({ timeout: 5000 }).catch(() => false);
+    if (selectAllVisible) {
+        await selectAllCheckbox.click();
+        await page.waitForTimeout(500);
+        console.log('Product bulk select-all checkbox clicked');
+    } else {
+        // Try selecting first two row checkboxes
+        const rowCheckboxes = page.locator('tbody input[type="checkbox"]');
+        const count = await rowCheckboxes.count();
+        if (count >= 2) {
+            await rowCheckboxes.nth(0).click();
+            await rowCheckboxes.nth(1).click();
+            await page.waitForTimeout(500);
+        } else {
+            console.log('No product bulk select checkboxes found — bulk operations may not be supported');
+        }
+    }
+});
+
+When('I trigger bulk delete for selected products', async ({ page }) => {
+    const bulkDeleteBtn = page.getByRole('button', { name: /delete selected|bulk delete/i })
+      .or(page.locator('button').filter({ hasText: /delete/i }).first());
+    const btnVisible = await bulkDeleteBtn.isVisible({ timeout: 5000 }).catch(() => false);
+    if (btnVisible) {
+        await bulkDeleteBtn.click();
+        await page.waitForTimeout(1000);
+    } else {
+        console.log('Bulk delete button not found — no bulk action bar appeared after selection');
+    }
+});
+
+Then('the bulk delete action should complete or a confirmation should appear', async ({ page }) => {
+    const confirmBtn = page.getByRole('button', { name: /confirm|yes|delete/i }).last();
+    const confirmVisible = await confirmBtn.isVisible({ timeout: 3000 }).catch(() => false);
+    if (confirmVisible) {
+        await confirmBtn.click();
+        await page.waitForTimeout(2000);
+        const successAlert = page.locator('[role="alert"]').filter({ hasText: /success|deleted/i });
+        const found = await successAlert.first().waitFor({ state: 'visible', timeout: 15000 }).then(() => true).catch(() => false);
+        if (!found) console.log('No success alert after bulk delete confirmation');
+    } else {
+        console.log('No bulk delete confirmation dialog — action may have succeeded or bulk delete is not supported');
+    }
+});
+

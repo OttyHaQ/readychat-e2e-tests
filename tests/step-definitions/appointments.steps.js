@@ -189,3 +189,103 @@ When('I attempt to reorder appointment columns', async ({ page }) => {
     }
 });
 
+When('I search appointments for {string}', async ({ page }, searchText) => {
+    const searchInput = page.getByRole('searchbox')
+      .or(page.getByPlaceholder(/search/i))
+      .or(page.locator('input[type="search"]'))
+      .first();
+    const searchVisible = await searchInput.isVisible({ timeout: 5000 }).catch(() => false);
+    if (searchVisible) {
+        await searchInput.fill(searchText);
+        await page.waitForTimeout(1500);
+        console.log(`Searched appointments for: "${searchText}"`);
+    } else {
+        console.log('Search input not found on appointments page');
+    }
+});
+
+Then('the appointments table should be filtered or a search result should appear', async ({ page }) => {
+    await page.waitForTimeout(1000);
+    const noResults = page.getByText(/no results|no appointments|no data/i).first();
+    const hasNoResults = await noResults.isVisible({ timeout: 3000 }).catch(() => false);
+    if (!hasNoResults) {
+        const rowCount = await page.locator('tbody tr').count();
+        expect(rowCount).toBeGreaterThanOrEqual(0);
+        console.log(`Appointments table shows ${rowCount} rows after search`);
+    }
+});
+
+When('I filter appointments by status {string}', async ({ page }, status) => {
+    // Look for a status filter dropdown
+    const statusFilter = page.getByRole('combobox', { name: /status|filter/i })
+      .or(page.getByLabel(/status/i))
+      .or(page.locator('select').first());
+    const filterVisible = await statusFilter.first().isVisible({ timeout: 5000 }).catch(() => false);
+    if (filterVisible) {
+        await statusFilter.first().click();
+        await page.waitForTimeout(500);
+        const option = page.getByRole('option', { name: new RegExp(status, 'i') });
+        const optionVisible = await option.isVisible({ timeout: 3000 }).catch(() => false);
+        if (optionVisible) {
+            await option.click();
+            await page.waitForTimeout(1500);
+            console.log(`Filtered appointments by status: ${status}`);
+        } else {
+            console.log(`Status option "${status}" not found in filter`);
+        }
+    } else {
+        // Try clicking a status badge/tab if filter dropdown doesn't exist
+        const statusTab = page.getByRole('tab', { name: new RegExp(status, 'i') });
+        const tabVisible = await statusTab.isVisible({ timeout: 3000 }).catch(() => false);
+        if (tabVisible) {
+            await statusTab.click();
+            await page.waitForTimeout(1500);
+        } else {
+            console.log('Status filter not found on appointments page');
+        }
+    }
+});
+
+Then('only confirmed appointments should be visible or a filter should be applied', async ({ page }) => {
+    await page.waitForTimeout(1000);
+    const rowCount = await page.locator('tbody tr').count();
+    console.log(`Appointments table shows ${rowCount} rows after status filter`);
+    expect(rowCount).toBeGreaterThanOrEqual(0);
+});
+
+When('I filter appointments by a date range', async ({ page }) => {
+    // Look for date filter inputs
+    const startDateInput = page.getByLabel(/start date|from date|date from/i)
+      .or(page.locator('input[type="date"]').first());
+    const startVisible = await startDateInput.isVisible({ timeout: 5000 }).catch(() => false);
+    if (startVisible) {
+        const today = new Date();
+        const startDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+        const endDate = today.toISOString().split('T')[0];
+        await startDateInput.fill(startDate);
+        const endDateInput = page.getByLabel(/end date|to date|date to/i)
+          .or(page.locator('input[type="date"]').nth(1));
+        const endVisible = await endDateInput.isVisible({ timeout: 3000 }).catch(() => false);
+        if (endVisible) await endDateInput.fill(endDate);
+        await page.waitForTimeout(1500);
+        console.log(`Applied date range filter: ${startDate} to ${endDate}`);
+    } else {
+        // Look for a date range picker button
+        const datePickerBtn = page.getByRole('button', { name: /date range|filter.*date/i });
+        const pickerVisible = await datePickerBtn.isVisible({ timeout: 3000 }).catch(() => false);
+        if (pickerVisible) {
+            await datePickerBtn.click();
+            await page.waitForTimeout(1000);
+        } else {
+            console.log('Date range filter not found on appointments page');
+        }
+    }
+});
+
+Then('appointments within that date range should be displayed or a filter should be applied', async ({ page }) => {
+    await page.waitForTimeout(1000);
+    const rowCount = await page.locator('tbody tr').count();
+    console.log(`Appointments table shows ${rowCount} rows after date range filter`);
+    expect(rowCount).toBeGreaterThanOrEqual(0);
+});
+

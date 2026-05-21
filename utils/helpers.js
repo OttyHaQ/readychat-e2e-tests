@@ -1,7 +1,51 @@
 import { expect } from '@playwright/test';
+import { TIMEOUTS, RETRIES } from './constants.js';
 
 export function fullUrl(path) {
   return `${process.env.BASE_URL}${path}`;
+}
+
+/**
+ * Navigate with retry logic to handle flaky navigations
+ * @param {Page} page - Playwright page object
+ * @param {string} urlPattern - URL pattern to wait for
+ * @param {Function} clickAction - Async function that performs the click action
+ * @param {number} maxAttempts - Maximum retry attempts (default: 3)
+ * @returns {Promise<void>}
+ */
+export async function navigateWithRetry(page, urlPattern, clickAction, maxAttempts = RETRIES.NAVIGATION_ATTEMPTS) {
+  let navigationSuccess = false;
+  let attempts = 0;
+
+  while (!navigationSuccess && attempts < maxAttempts) {
+    attempts++;
+
+    try {
+      const navigationPromise = page.waitForURL(
+        url => typeof urlPattern === 'string'
+          ? url.href.includes(urlPattern)
+          : urlPattern(url),
+        { timeout: TIMEOUTS.NAVIGATION_RETRY }
+      );
+
+      await clickAction();
+      await navigationPromise;
+
+      // Verify navigation
+      const currentUrl = page.url();
+      const urlToCheck = typeof urlPattern === 'string' ? urlPattern : 'expected URL';
+      if (typeof urlPattern === 'string' ? currentUrl.includes(urlPattern) : true) {
+        navigationSuccess = true;
+        console.log(`✓ Navigation successful (attempt ${attempts})`);
+      }
+    } catch (error) {
+      if (attempts === maxAttempts) {
+        throw new Error(`Failed to navigate after ${maxAttempts} attempts: ${error.message}`);
+      }
+      console.log(`⚠️ Navigation attempt ${attempts} failed, retrying...`);
+      await page.waitForTimeout(TIMEOUTS.DELAY_RETRY);
+    }
+  }
 }
 
 

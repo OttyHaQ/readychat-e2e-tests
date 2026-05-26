@@ -207,16 +207,16 @@ export class ProductsPage {
         await this.productNameInput.fill(productData.name);
         
         // Always select category (required field)
-        await this.categorySelect.click();
+        await this.categorySelect.click({ force: true });
         await this.page.waitForTimeout(500);
-        
+
         // Get first real category (exclude "Add New Category")
         const firstCategory = this.page
             .getByRole('option')
             .filter({ hasNotText: /add new category/i })
             .first();
         await firstCategory.click();
-        
+
         // Fill description
         if (productData.description) {
             await this.descriptionInput.fill(productData.description);
@@ -271,12 +271,11 @@ export class ProductsPage {
         await this.productNameInput.clear();
         await this.productNameInput.fill(newProductData.name);
 
-        // Select category if exists
         // Always select category (required field)
-        await this.categorySelect.click();
+        await this.categorySelect.click({ force: true });
         await this.page.waitForTimeout(500);
 
-       const firstCategory = this.page
+        const firstCategory = this.page
             .getByRole('option')
             .filter({ hasNotText: /add new category/i })
             .first();

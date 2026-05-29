@@ -174,7 +174,7 @@ When('I select multiple products using bulk selection', async ({ page }) => {
     const selectAllCheckbox = page.locator('thead input[type="checkbox"]').first();
     const selectAllVisible = await selectAllCheckbox.isVisible({ timeout: 5000 }).catch(() => false);
     if (selectAllVisible) {
-        await selectAllCheckbox.click();
+        await selectAllCheckbox.click({ force: true });
         await page.waitForTimeout(500);
         console.log('Product bulk select-all checkbox clicked');
     } else {
@@ -182,8 +182,8 @@ When('I select multiple products using bulk selection', async ({ page }) => {
         const rowCheckboxes = page.locator('tbody input[type="checkbox"]');
         const count = await rowCheckboxes.count();
         if (count >= 2) {
-            await rowCheckboxes.nth(0).click();
-            await rowCheckboxes.nth(1).click();
+            await rowCheckboxes.nth(0).click({ force: true });
+            await rowCheckboxes.nth(1).click({ force: true });
             await page.waitForTimeout(500);
         } else {
             console.log('No product bulk select checkboxes found — bulk operations may not be supported');

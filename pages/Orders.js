@@ -378,8 +378,11 @@ export class Orders {
     }
     
     if (orderData.quantity) {
-      await this.quantityField.clear();
-      await this.quantityField.fill(orderData.quantity.toString());
+      const quantityVisible = await this.quantityField.isVisible({ timeout: 5000 }).catch(() => false);
+      if (quantityVisible) {
+        await this.quantityField.clear();
+        await this.quantityField.fill(orderData.quantity.toString());
+      }
     }
     
     if (orderData.products) {

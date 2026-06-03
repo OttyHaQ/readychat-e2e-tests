@@ -12,6 +12,19 @@ Given('I am on the Orders page', async ({ page }) => {
     await safeClick(page);
 });
 
+Given('at least one cancellable order exists', async ({ page }) => {
+    const ordersPage = new Orders(page);
+    await ordersPage.switchToStatusTab('all');
+    await page.waitForTimeout(1000);
+    const hasCancellable = await ordersPage.hasCancellableOrder();
+    if (!hasCancellable) {
+        console.log('No cancellable orders found — attempting to create one');
+        await ordersPage.createOrder();
+        await ordersPage.navigateToOrders();
+        await page.waitForTimeout(2000);
+    }
+});
+
 Then('all order metrics should be visible including total, completed, in progress, cancelled, and sales', async ({ page }) => {
     const ordersPage = new Orders(page);
     await expect(ordersPage.totalOrdersMetric).toContainText(/total orders/i);

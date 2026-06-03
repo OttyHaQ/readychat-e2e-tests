@@ -39,6 +39,7 @@ Feature: Order Management
 
   Scenario: Cancel an order
     Given I am on the Orders page
+    And at least one cancellable order exists
     When I navigate to all orders and cancel an order
     Then the cancel action should complete successfully
 
@@ -49,6 +50,7 @@ Feature: Order Management
 
   Scenario: View and edit order details
     Given I am on the Orders page
+    And at least one cancellable order exists
     When I navigate to all orders and view the first order details
     Then the order details page should show order ID and customer details
     When I edit the order with notes "Updated order via automation" and quantity "5"

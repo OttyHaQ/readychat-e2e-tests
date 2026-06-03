@@ -651,4 +651,58 @@ async changeOrderStatus() {
     await this.productSearchField.waitFor({ state: 'visible', timeout: 10000 });
     await this.productSearchField.fill(searchText);
   }
+
+  async hasCancellableOrder() {
+    const rows = this.page.locator('table tbody tr');
+    const count = await rows.count();
+    for (let i = 0; i < count; i++) {
+      const actionsBtn = rows.nth(i).locator('td').last().getByRole('button');
+      if (!await actionsBtn.isVisible({ timeout: 2000 }).catch(() => false)) continue;
+      await actionsBtn.click();
+      await this.page.waitForTimeout(300);
+      const exists = (await this.page.getByText('Cancel Order', { exact: false }).count()) > 0;
+      await this.page.keyboard.press('Escape');
+      await this.page.waitForTimeout(200);
+      if (exists) return true;
+    }
+    return false;
+  }
+
+  async createOrder() {
+    const createBtn = this.page.getByRole('button', { name: /new order|create order|add order/i })
+      .or(this.page.getByRole('link', { name: /new order|create order/i }));
+    if (!await createBtn.first().isVisible({ timeout: 5000 }).catch(() => false)) {
+      console.log('Create order button not found — orders may be created via chat');
+      return false;
+    }
+    await createBtn.first().click();
+    await this.page.waitForTimeout(1500);
+
+    // Select first available product
+    const productDropdown = this.selectProductDropdown.first();
+    if (await productDropdown.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await productDropdown.click();
+      await this.page.waitForTimeout(500);
+      const firstOption = this.page.getByRole('option').first();
+      if (await firstOption.isVisible({ timeout: 3000 }).catch(() => false)) {
+        await firstOption.click();
+        await this.page.waitForTimeout(500);
+      }
+    }
+
+    // Fill quantity if visible
+    if (await this.quantityField.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await this.quantityField.clear();
+      await this.quantityField.fill('1');
+    }
+
+    // Submit
+    const submitBtn = this.page.getByRole('button', { name: /save|submit|create|place order/i }).first();
+    if (await submitBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await submitBtn.click();
+      await this.page.waitForTimeout(2000);
+    }
+
+    return true;
+  }
 }

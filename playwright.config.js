@@ -92,6 +92,7 @@ export default defineConfig({
 
     reporter: [
         ['html', { open: !process.env.CI ? 'always' : 'never' }],
+        ['json', { outputFile: 'test-results/results.json' }],
         ['list'],
     ],
 });

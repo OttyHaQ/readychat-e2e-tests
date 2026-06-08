@@ -62,6 +62,13 @@ jobs:
         env: ${{ github.event.inputs.environment || 'qa' }}
       run: npm test
 
+    - name: Build observability dashboard
+      if: always()
+      run: |
+        curl -sf "http://www.quickagent.live/test-history.json" -o playwright-report/test-history.json \
+          || echo '[]' > playwright-report/test-history.json
+        node scripts/build-dashboard.js
+
     - name: Upload HTML report
       uses: actions/upload-artifact@v4
       if: always()
@@ -78,26 +85,16 @@ jobs:
         path: test-results/
         retention-days: 30
 
-    - name: Build observability dashboard
-      if: always()
-      env:
-        PAGES_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
-      run: |
-        curl -sf "$PAGES_URL/test-history.json" -o playwright-report/test-history.json \
-          || echo '[]' > playwright-report/test-history.json
-        node scripts/build-dashboard.js
-
     - name: Publish test results summary
       if: always()
       run: |
-        PAGES_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
         echo "## Playwright Test Results" >> $GITHUB_STEP_SUMMARY
         echo "Environment: ${{ github.event.inputs.environment || 'qa' }}" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "| Report | Link |" >> $GITHUB_STEP_SUMMARY
         echo "|--------|------|" >> $GITHUB_STEP_SUMMARY
-        echo "| HTML Report | $PAGES_URL/ |" >> $GITHUB_STEP_SUMMARY
-        echo "| Observability Dashboard | $PAGES_URL/dashboard.html |" >> $GITHUB_STEP_SUMMARY
+        echo "| HTML Report | http://www.quickagent.live/ |" >> $GITHUB_STEP_SUMMARY
+        echo "| Observability Dashboard | http://www.quickagent.live/dashboard.html |" >> $GITHUB_STEP_SUMMARY
 
   deploy-report:
     needs: test

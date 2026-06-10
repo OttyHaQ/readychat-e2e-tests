@@ -218,20 +218,51 @@ export class OnboardingPage {
     // Fill address information
     await this.addressField.fill(data.address);
     await this.cityField.fill(data.city);
-    await this.stateField.fill(data.state);
     await this.postalCodeField.fill(data.postalCode);
-    
+
     // Select country
     await this.selectDropdownOption(
       this.countryDropdown,
       this.searchField,
       data.country
     );
-    
+
+    // Select state/province — it's a searchable dropdown populated after country selection
+    await this.page.waitForTimeout(500);
+    const stateDropdownBtn = this.page.locator('button').filter({ hasText: /Enter your state\/province/i }).first();
+    const stateIsDropdown = await stateDropdownBtn.isVisible({ timeout: 3000 }).catch(() => false);
+    if (stateIsDropdown) {
+      await stateDropdownBtn.click();
+      const stateSearch = this.page.getByPlaceholder(/search/i).last();
+      if (await stateSearch.isVisible({ timeout: 3000 }).catch(() => false)) {
+        await stateSearch.fill(data.state);
+        await this.page.waitForTimeout(500);
+      }
+      await this.page.locator('[role="option"]').filter({ hasText: new RegExp(data.state, 'i') }).first().click();
+    } else {
+      await this.stateField.fill(data.state);
+    }
+
+    // Select phone country code before filling number
+    const phoneCountryBtn = this.page.locator('button').filter({ hasText: 'Select an option' }).first()
+      .or(this.page.locator('.react-international-phone-country-selector-button').first());
+    const hasPhoneCountry = await phoneCountryBtn.isVisible({ timeout: 3000 }).catch(() => false);
+    if (hasPhoneCountry) {
+      await phoneCountryBtn.click();
+      await this.page.waitForTimeout(500);
+      const phoneSearch = this.page.getByPlaceholder(/search/i).last();
+      if (await phoneSearch.isVisible({ timeout: 3000 }).catch(() => false)) {
+        await phoneSearch.fill('Nigeria');
+        await this.page.waitForTimeout(500);
+      }
+      await this.page.locator('[role="option"]').filter({ hasText: /nigeria/i }).first().click();
+      await this.page.waitForTimeout(300);
+    }
+
     // Fill contact number
     await this.contactNumberField.waitFor({ state: 'visible', timeout: 5000 });
     await this.contactNumberField.fill(data.contactNumber);
-    await this.contactNumberField.dispatchEvent('input'); // Trigger validation
+    await this.contactNumberField.dispatchEvent('input');
     
     // Select currency
     await this.currencyDropdown.waitFor({ state: 'visible', timeout: 5000 });
